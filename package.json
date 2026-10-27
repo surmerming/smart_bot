@@ -1,0 +1,11 @@
+{
+  "name": "smart_bot",
+  "private": true,
+  "version": "1.0.0",
+  "description": "小答 AI 客服：一键启动前端 + 后端",
+  "scripts": {
+    "start": "bash dev.sh",
+    "stop": "bash dev.sh stop",
+    "status": "bash dev.sh status"
+  }
+}

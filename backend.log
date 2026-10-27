@@ -1,0 +1,45 @@
+Building prefix dict from the default dictionary ...
+2026-10-27 19:43:21,219 DEBUG jieba: Building prefix dict from the default dictionary ...
+Loading model from cache /var/folders/sg/hr29lqt56g717j1xt5yts0940000gn/T/jieba.cache
+2026-10-27 19:43:21,219 DEBUG jieba: Loading model from cache /var/folders/sg/hr29lqt56g717j1xt5yts0940000gn/T/jieba.cache
+Loading model cost 0.303 seconds.
+2026-10-27 19:43:21,522 DEBUG jieba: Loading model cost 0.303 seconds.
+Prefix dict has been built successfully.
+2026-10-27 19:43:21,522 DEBUG jieba: Prefix dict has been built successfully.
+2026-10-27 19:43:21,539 INFO app.main: 知识库加载完成：40 条 FAQ，分类 {'aftersales': 14, 'presales': 9, 'transaction': 10, 'account': 7}
+2026-10-27 19:43:21,903 INFO app.agent.llm: LLM 模式：真实 DeepSeek API (deepseek-chat)
+INFO:     Started server process [54201]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
+INFO:     127.0.0.1:55227 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55229 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55473 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55971 - "POST /api/v1/chat/init HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55972 - "POST /api/v1/chat/stream HTTP/1.1" 200 OK
+2026-10-27 19:43:37,125 INFO httpx2: HTTP Request: POST https://api.deepseek.com/chat/completions "HTTP/1.1 200 OK"
+2026-10-27 19:43:37,476 INFO httpx2: HTTP Request: POST https://api.deepseek.com/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:55979 - "POST /api/v1/chat/stream HTTP/1.1" 200 OK
+2026-10-27 19:43:38,261 INFO httpx2: HTTP Request: POST https://api.deepseek.com/chat/completions "HTTP/1.1 200 OK"
+2026-10-27 19:43:39,141 INFO httpx2: HTTP Request: POST https://api.deepseek.com/chat/completions "HTTP/1.1 200 OK"
+2026-10-27 19:43:40,052 INFO httpx2: HTTP Request: POST https://api.deepseek.com/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:55990 - "POST /api/v1/chat/stream HTTP/1.1" 200 OK
+2026-10-27 19:43:40,806 INFO httpx2: HTTP Request: POST https://api.deepseek.com/chat/completions "HTTP/1.1 200 OK"
+2026-10-27 19:43:41,579 INFO httpx2: HTTP Request: POST https://api.deepseek.com/chat/completions "HTTP/1.1 200 OK"
+2026-10-27 19:43:42,288 INFO httpx2: HTTP Request: POST https://api.deepseek.com/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:56454 - "POST /api/v1/chat/init HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56509 - "POST /api/v1/chat/stream HTTP/1.1" 200 OK
+2026-10-27 19:44:05,333 INFO httpx2: HTTP Request: POST https://api.deepseek.com/chat/completions "HTTP/1.1 200 OK"
+2026-10-27 19:44:05,783 INFO httpx2: HTTP Request: POST https://api.deepseek.com/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:58331 - "POST /api/v1/chat/init HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58334 - "POST /api/v1/chat/init HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58350 - "POST /api/v1/chat/init HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58380 - "POST /api/v1/chat/init HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58382 - "POST /api/v1/chat/stream HTTP/1.1" 200 OK
+2026-10-27 19:45:22,380 INFO httpx2: HTTP Request: POST https://api.deepseek.com/chat/completions "HTTP/1.1 200 OK"
+2026-10-27 19:45:23,067 INFO httpx2: HTTP Request: POST https://api.deepseek.com/chat/completions "HTTP/1.1 200 OK"
+2026-10-27 19:45:23,773 INFO httpx2: HTTP Request: POST https://api.deepseek.com/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:58861 - "POST /api/v1/chat/stream HTTP/1.1" 200 OK
+2026-10-27 19:45:44,523 INFO httpx2: HTTP Request: POST https://api.deepseek.com/chat/completions "HTTP/1.1 200 OK"
+2026-10-27 19:45:45,212 INFO httpx2: HTTP Request: POST https://api.deepseek.com/chat/completions "HTTP/1.1 200 OK"
+2026-10-27 19:45:45,988 INFO httpx2: HTTP Request: POST https://api.deepseek.com/chat/completions "HTTP/1.1 200 OK"

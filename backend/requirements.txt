@@ -1,0 +1,11 @@
+# 客服机器人 Agent 后端依赖（MVP，支持 Python 3.14）
+fastapi>=0.115
+uvicorn[standard]>=0.32
+pydantic>=2.12
+pydantic-settings>=2.7
+python-dotenv>=1.0
+openai>=1.51
+jieba>=0.42
+httpx>=0.27
+pytest>=8.3
+pytest-asyncio>=0.24

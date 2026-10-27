@@ -1,0 +1,369 @@
+{
+  "meta": {
+    "brand": "小答",
+    "description": "客服机器人知识库 Source of Truth。修改后运行 knowledge_base/build_kb.py 一键重建索引。",
+    "fields": ["id", "category", "standard_question", "variants", "answer", "risk_level", "follow_up"]
+  },
+  "faqs": [
+    {
+      "id": "faq_001",
+      "category": "aftersales",
+      "standard_question": "支持7天无理由退换吗？",
+      "variants": ["可以退吗", "不满意能换吗", "拆封了还能退吗", "拆了包装还能退吗", "衣服不合适能换不", "你们这破衣服能退不", "不想要了能退吗", "7天无理由是什么意思", "不喜欢能退货吗"],
+      "answer": "支持7天无理由退换，商品不影响二次销售即可。拆封试用不影响，只要包装配件齐全就行。",
+      "risk_level": "low",
+      "follow_up": ["退货运费谁出", "退款多久到账"]
+    },
+    {
+      "id": "faq_002",
+      "category": "presales",
+      "standard_question": "下单后多久发货？",
+      "variants": ["什么时候发货", "发货要几天", "48小时发货吗", "多久能发货", "拍下后几天发货", "发货时效是多少"],
+      "answer": "默认48小时内发货，节假日顺延。急单可以备注，仓库会优先处理。",
+      "risk_level": "low",
+      "follow_up": ["发什么快递", "怎么查物流"]
+    },
+    {
+      "id": "faq_003",
+      "category": "presales",
+      "standard_question": "发什么快递？",
+      "variants": ["默认什么快递", "能发顺丰吗", "可以指定快递吗", "发什么物流", "快递是哪家"],
+      "answer": "默认发中通或圆通，暂不支持指定快递。偏远地区发邮政。",
+      "risk_level": "low",
+      "follow_up": []
+    },
+    {
+      "id": "faq_004",
+      "category": "presales",
+      "standard_question": "运费怎么算？",
+      "variants": ["要运费吗", "满多少包邮", "偏远地区加运费吗", "包邮条件是什么", "运费多少钱"],
+      "answer": "全场满99元包邮，不满99元运费8元；新疆、西藏、内蒙古等偏远地区加收10元。",
+      "risk_level": "low",
+      "follow_up": []
+    },
+    {
+      "id": "faq_005",
+      "category": "presales",
+      "standard_question": "支持哪些支付方式？",
+      "variants": ["怎么付款", "支持花呗吗", "能货到付款吗", "支持微信支付吗", "可以用信用卡吗"],
+      "answer": "支持微信、支付宝、银行卡、花呗分期。暂不支持货到付款。",
+      "risk_level": "low",
+      "follow_up": ["支付失败怎么办"]
+    },
+    {
+      "id": "faq_006",
+      "category": "presales",
+      "standard_question": "商品是正品吗？",
+      "variants": ["是不是正品", "从哪发货", "有授权吗", "保真吗", "会不会是假货"],
+      "answer": "全部商品品牌直供、官方授权，支持专柜验货，假一赔十。",
+      "risk_level": "low",
+      "follow_up": []
+    },
+    {
+      "id": "faq_007",
+      "category": "presales",
+      "standard_question": "有优惠券吗？",
+      "variants": ["怎么领优惠券", "有满减吗", "能便宜点吗", "有什么优惠", "新人有优惠吗"],
+      "answer": "新用户立减20元，首页可领满200减30券。优惠券可与平台活动叠加使用。",
+      "risk_level": "low",
+      "follow_up": ["优惠券用不了"]
+    },
+    {
+      "id": "faq_008",
+      "category": "presales",
+      "standard_question": "会员有什么权益？",
+      "variants": ["开会员有什么用", "会员包邮吗", "会员有什么优惠", "会员划算吗"],
+      "answer": "会员每月3张运费券、专属95折、生日礼包。年度会员额外享12期免息。",
+      "risk_level": "low",
+      "follow_up": []
+    },
+    {
+      "id": "faq_009",
+      "category": "presales",
+      "standard_question": "保修多久？",
+      "variants": ["坏了能修吗", "质保几年", "保修范围是什么", "电子产品保修期", "维修要钱吗"],
+      "answer": "电子类商品整机保修1年，主要部件保修3年；人为损坏不在保修范围内。",
+      "risk_level": "low",
+      "follow_up": ["保修期内坏了怎么修"]
+    },
+    {
+      "id": "faq_010",
+      "category": "transaction",
+      "standard_question": "怎么查物流？",
+      "variants": ["我的快递到哪了", "物流信息怎么看", "怎么追踪订单", "快递单号在哪查", "物流查询"],
+      "answer": "App订单详情可实时查看物流轨迹；也可以把订单号发给我，我帮你查。",
+      "risk_level": "low",
+      "follow_up": ["物流好几天不动"]
+    },
+    {
+      "id": "faq_011",
+      "category": "transaction",
+      "standard_question": "能修改收货地址吗？",
+      "variants": ["地址填错了怎么办", "想换个地址", "还没发货能改地址吗", "收货地址怎么改"],
+      "answer": "未发货订单可在订单详情自助修改地址；已发货需联系人工处理，可能产生改址费用。",
+      "risk_level": "mid",
+      "follow_up": []
+    },
+    {
+      "id": "faq_012",
+      "category": "transaction",
+      "standard_question": "怎么取消订单？",
+      "variants": ["不想要了怎么退单", "能取消订单吗", "下单了能退吗", "取消订单钱怎么退"],
+      "answer": "未发货订单可自助取消，支付款原路退回；已发货订单请走退货流程。",
+      "risk_level": "mid",
+      "follow_up": ["退款多久到账"]
+    },
+    {
+      "id": "faq_013",
+      "category": "transaction",
+      "standard_question": "支付失败怎么办？",
+      "variants": ["付款不成功", "一直支付不了", "支付被拦截了", "下单支付失败"],
+      "answer": "先确认银行卡余额或支付限额，换个支付方式重试；订单超时未支付会自动关闭，重新下单即可。",
+      "risk_level": "mid",
+      "follow_up": []
+    },
+    {
+      "id": "faq_014",
+      "category": "transaction",
+      "standard_question": "订单多久自动关闭？",
+      "variants": ["没付款会被取消吗", "订单怎么失效了", "多久不付款取消", "超时未支付"],
+      "answer": "普通订单24小时未支付会自动关闭，关闭后库存释放，可重新下单。",
+      "risk_level": "low",
+      "follow_up": []
+    },
+    {
+      "id": "faq_015",
+      "category": "transaction",
+      "standard_question": "物流好几天不动怎么办？",
+      "variants": ["快递不更新", "物流一直不动", "快件卡住了", "物流停留好几天"],
+      "answer": "物流超过48小时未更新，可能是中转或天气影响；把订单号发我，我帮你催件。",
+      "risk_level": "mid",
+      "follow_up": []
+    },
+    {
+      "id": "faq_016",
+      "category": "transaction",
+      "standard_question": "发货后能改快递吗？",
+      "variants": ["能换快递吗", "想加急能行吗", "发货后能改地址吗", "快递发错了"],
+      "answer": "发货后无法更换快递，急件可尝试联系承运商客服加急，或联系人工看能否拦截退回。",
+      "risk_level": "mid",
+      "follow_up": []
+    },
+    {
+      "id": "faq_017",
+      "category": "transaction",
+      "standard_question": "怎么开发票？",
+      "variants": ["要发票", "能开专票吗", "发票怎么开", "开票信息"],
+      "answer": "订单完成后30天内可申请电子发票，在「我的-发票助手」自助开具；专票需提供税号。",
+      "risk_level": "low",
+      "follow_up": []
+    },
+    {
+      "id": "faq_018",
+      "category": "transaction",
+      "standard_question": "拼团怎么玩？",
+      "variants": ["拼团是什么意思", "拼单怎么操作", "团购规则", "拼团不成团怎么办"],
+      "answer": "拼团价需2人成团，24小时内未成团自动退款。已成团不支持中途退出。",
+      "risk_level": "low",
+      "follow_up": []
+    },
+    {
+      "id": "faq_019",
+      "category": "transaction",
+      "standard_question": "预售什么时候发货？",
+      "variants": ["预售要等多久", "预售商品啥时候发", "预售什么时候到"],
+      "answer": "预售商品按页面标注的预计发货时间发出，通常7-15天，请留意发货通知。",
+      "risk_level": "mid",
+      "follow_up": []
+    },
+    {
+      "id": "faq_020",
+      "category": "presales",
+      "standard_question": "批量购买有优惠吗？",
+      "variants": ["拿货价多少", "批发价怎么算", "买多件便宜吗", "企业采购有优惠吗"],
+      "answer": "单笔满3000元可联系商务申请阶梯价，量大从优。",
+      "risk_level": "low",
+      "follow_up": []
+    },
+    {
+      "id": "faq_021",
+      "category": "aftersales",
+      "standard_question": "怎么申请退货？",
+      "variants": ["退货流程是什么", "怎么退货", "退货怎么操作", "申请售后的步骤"],
+      "answer": "在订单详情点「申请售后」→ 选择退货 → 审核通过后按指引寄回 → 仓库收货质检 → 退款。",
+      "risk_level": "mid",
+      "follow_up": ["退货运费谁出", "退款多久到账"]
+    },
+    {
+      "id": "faq_022",
+      "category": "aftersales",
+      "standard_question": "退货运费谁出？",
+      "variants": ["运费谁承担", "无理由退货要出运费吗", "质量问题运费谁给", "退货运费怎么算"],
+      "answer": "质量问题或发错货，运费由我们承担（先垫付后报销）；7天无理由退换，退货运费由买家承担。",
+      "risk_level": "mid",
+      "follow_up": []
+    },
+    {
+      "id": "faq_023",
+      "category": "aftersales",
+      "standard_question": "退款多久到账？",
+      "variants": ["退款要几天", "钱什么时候退回来", "退款迟迟不到账", "退款审核要多久"],
+      "answer": "仓库收货后24小时内审核退款，到账时间1-3个工作日，原路退回。",
+      "risk_level": "low",
+      "follow_up": ["退款退到哪里"]
+    },
+    {
+      "id": "faq_024",
+      "category": "aftersales",
+      "standard_question": "怎么换货？",
+      "variants": ["能直接换吗", "想换个尺码", "换货要多久", "换货流程"],
+      "answer": "申请售后选「换货」→ 寄回旧件 → 发出新品，来回各需3-5天。换货免收运费。",
+      "risk_level": "mid",
+      "follow_up": []
+    },
+    {
+      "id": "faq_025",
+      "category": "aftersales",
+      "standard_question": "收到的东西坏了怎么办？",
+      "variants": ["商品破损", "质量有问题", "收到的货是坏的", "东西坏了你们管不管"],
+      "answer": "收到7天内发现问题，拍照联系人工或申请售后，质量问题运费我们承担，可退可换。",
+      "risk_level": "mid",
+      "follow_up": ["退货运费谁出"]
+    },
+    {
+      "id": "faq_026",
+      "category": "aftersales",
+      "standard_question": "保修期内坏了怎么修？",
+      "variants": ["能免费修吗", "维修流程是什么", "寄修怎么操作"],
+      "answer": "保修期内非人为损坏免费维修。寄修流程：申请售后 → 寄回 → 检测 → 维修或换新 → 寄回。",
+      "risk_level": "mid",
+      "follow_up": []
+    },
+    {
+      "id": "faq_027",
+      "category": "aftersales",
+      "standard_question": "退货时赠品要一起退吗？",
+      "variants": ["赠品需要退吗", "礼品要退回吗", "赠品不退回会怎样"],
+      "answer": "退货需连同赠品一并退回，未退回将在退款中扣除赠品价值。",
+      "risk_level": "low",
+      "follow_up": []
+    },
+    {
+      "id": "faq_028",
+      "category": "aftersales",
+      "standard_question": "退款退到哪里？",
+      "variants": ["钱退哪张卡", "会退到余额吗", "退款渠道", "花呗退款退哪"],
+      "answer": "按原支付渠道原路退回；优惠券支付部分不退现金。花呗分期退回分期额度。",
+      "risk_level": "low",
+      "follow_up": ["退款多久到账"]
+    },
+    {
+      "id": "faq_029",
+      "category": "aftersales",
+      "standard_question": "退货能上门取件吗？",
+      "variants": ["可以上门取吗", "寄回地址是哪里", "怎么寄回", "上门取件怎么预约"],
+      "answer": "支持上门取件，预约后快递员上门；也可自行寄回，寄回地址在售后详情页。",
+      "risk_level": "low",
+      "follow_up": []
+    },
+    {
+      "id": "faq_030",
+      "category": "aftersales",
+      "standard_question": "退款金额不对怎么办？",
+      "variants": ["少退了几块钱", "退款金额有误", "部分退款怎么弄", "退款和实付不一致"],
+      "answer": "退款金额以实付为准，明细可在退款详情查看。如仍有疑问，需要人工核对金额明细。",
+      "risk_level": "high",
+      "follow_up": []
+    },
+    {
+      "id": "faq_031",
+      "category": "aftersales",
+      "standard_question": "超过7天还能退吗？",
+      "variants": ["15天了能退吗", "过了7天怎么办", "超时还能退吗"],
+      "answer": "超7天的质量问题30天内可申请售后；无理由退货超期不支持，特殊情况可联系人工说明。",
+      "risk_level": "mid",
+      "follow_up": []
+    },
+    {
+      "id": "faq_032",
+      "category": "aftersales",
+      "standard_question": "坏了能直接换新吗？",
+      "variants": ["换新机", "以旧换新", "故障能换新吗", "换新政策"],
+      "answer": "保修期内主要部件故障经检测确认，可换新或维修；是否换新以检测结果为准。",
+      "risk_level": "mid",
+      "follow_up": []
+    },
+    {
+      "id": "faq_033",
+      "category": "aftersales",
+      "standard_question": "我要投诉！",
+      "variants": ["投诉电话", "找你们领导", "举报店铺", "我要曝光你们", "投诉渠道"],
+      "answer": "非常抱歉给您带来不好的体验！我马上帮您转接专人处理，您说的情况我都记下来了，稍等。",
+      "risk_level": "high",
+      "follow_up": []
+    },
+    {
+      "id": "faq_034",
+      "category": "account",
+      "standard_question": "怎么注册登录？",
+      "variants": ["怎么登录", "手机号怎么注册", "注册不了", "怎么创建账号"],
+      "answer": "手机号一键注册、验证码登录；也支持微信、支付宝快捷登录。",
+      "risk_level": "low",
+      "follow_up": []
+    },
+    {
+      "id": "faq_035",
+      "category": "account",
+      "standard_question": "忘记密码怎么办？",
+      "variants": ["密码忘了", "怎么找回密码", "登录不上去", "重置密码"],
+      "answer": "在登录页点「忘记密码」，通过注册手机号验证码重置。操作过程中请注意账户安全。",
+      "risk_level": "mid",
+      "follow_up": []
+    },
+    {
+      "id": "faq_036",
+      "category": "account",
+      "standard_question": "怎么更换绑定手机号？",
+      "variants": ["想换手机号", "手机号换了怎么登录", "改绑定手机", "换绑"],
+      "answer": "在「设置-账户与安全-更换手机号」，需原手机号验证码验证后修改。",
+      "risk_level": "mid",
+      "follow_up": []
+    },
+    {
+      "id": "faq_037",
+      "category": "account",
+      "standard_question": "积分怎么用？",
+      "variants": ["积分有什么用", "积分能换东西吗", "积分怎么兑换", "积分怎么抵现"],
+      "answer": "积分100抵1元，下单时可抵扣；也可在积分商城兑换礼品。积分12个月有效。",
+      "risk_level": "low",
+      "follow_up": []
+    },
+    {
+      "id": "faq_038",
+      "category": "account",
+      "standard_question": "怎么注销账号？",
+      "variants": ["想注销账号", "删除账号", "不用了怎么销户", "注销流程"],
+      "answer": "注销涉及账户资产核验，需人工审核处理。请稍等，我帮您转接专人处理。",
+      "risk_level": "high",
+      "follow_up": []
+    },
+    {
+      "id": "faq_039",
+      "category": "account",
+      "standard_question": "账号被盗了怎么办？",
+      "variants": ["被人盗号", "有陌生订单", "账户异常登录", "账号被异地登录"],
+      "answer": "请立即在登录页点「账号申诉」冻结账户，同时我帮您转接人工加急处理。",
+      "risk_level": "high",
+      "follow_up": []
+    },
+    {
+      "id": "faq_040",
+      "category": "account",
+      "standard_question": "优惠券用不了怎么办？",
+      "variants": ["券过期了", "优惠券不可用", "下单时不能用券", "券怎么失效了"],
+      "answer": "请检查券是否在有效期内、是否满足使用门槛；每单限用一张，平台券可与店铺券叠加。",
+      "risk_level": "low",
+      "follow_up": []
+    }
+  ]
+}
