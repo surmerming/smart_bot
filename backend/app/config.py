@@ -64,6 +64,16 @@ class Settings:
     MAX_INPUT_LEN: int = _env_int("MAX_INPUT_LEN", 2000)
     RATE_LIMIT_PER_MIN: int = _env_int("RATE_LIMIT_PER_MIN", 10)
     HISTORY_WINDOW_TURNS: int = _env_int("HISTORY_WINDOW_TURNS", 5)
+    # V2.0 补齐：会话 30 分钟无操作自动复位（plan 3.1-4）
+    SESSION_TIMEOUT_MINUTES: int = _env_int("SESSION_TIMEOUT_MINUTES", 30)
+    # V2.0 补齐：确认状态 30 秒无回复自动取消（plan 5.3）
+    CONFIRM_TIMEOUT_SECONDS: int = _env_int("CONFIRM_TIMEOUT_SECONDS", 30)
+    # V2.0 补齐：连续 N 轮未解决（转人工/兜底）→ 下次直接硬转人工，防死循环（plan 6.2-2）
+    REPEAT_UNRESOLVED_LIMIT: int = _env_int("REPEAT_UNRESOLVED_LIMIT", 2)
+    # V2.0 补齐：OTP 聊天内验证码有效期（plan 3.1-5②）
+    OTP_TTL_MINUTES: int = _env_int("OTP_TTL_MINUTES", 10)
+    # OTP 演示模式：响应直接返回验证码（开发/联调用）；生产设 false 接真实短信服务
+    OTP_MOCK_MODE: bool = _env_str("OTP_MOCK_MODE", "true").lower() in ("1", "true", "yes", "on")
 
     # --- 存储 ---
     DB_PATH: Path = BASE_DIR / _env_str("DB_PATH", "data/chat.db")

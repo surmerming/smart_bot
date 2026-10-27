@@ -8,10 +8,12 @@
  *   - api-base  后端地址（缺省同源，走 /api 代理）
  *   - brand     品牌名（缺省取后端 init 返回）
  */
-import { chatInit, fetchQueueStatus, manualHandover, sendFeedback, submitCsat } from "./api";
+import { chatInit, fetchQueueStatus, manualHandover, sendFeedback, sendOtp, submitCsat, verifyOtp } from "./api";
 import { postSSE } from "./sse-client";
 
 const STORE_KEY = "xd_anonymous_session_id";
+// V2.0 OTP 触发词：涉及账户安全 / 验证码的敏感引导（plan 3.1-5②）
+const OTP_TRIGGER_RE = /忘记密码|找回密码|改手机号|修改手机号|换绑|验证码|收不到短信/;
 
 interface ChatMsg {
   role: "user" | "assistant";
@@ -114,6 +116,20 @@ const WIDGET_CSS = `
 }
 .xd-input-bar button:disabled { background: #A8C8EA; cursor: not-allowed; }
 .xd-error { text-align: center; color: #EF4444; font-size: 12px; padding: 8px 12px; }
+/* V2.0 免责声明（plan 6.9-1）：发送区上方小字明示 */
+.xd-disclaimer {
+  padding: 6px 16px 0; background: #FAFAFC; text-align: center;
+  font-size: 10.5px; color: #9CA3AF; line-height: 1.5;
+}
+/* V2.0 OTP 验证卡片（plan 3.1-5②） */
+.xd-otp { margin-top: 8px; padding: 10px 12px; background: #F0F9FF; border: 1px solid #BAE6FD; border-radius: 10px; font-size: 12px; color: #075985; }
+.xd-otp .xd-otp-q { margin-bottom: 6px; color: #0369A1; font-weight: 600; }
+.xd-otp .xd-otp-row { display: flex; gap: 6px; margin-bottom: 6px; }
+.xd-otp input { flex: 1; border: 1px solid #BAE6FD; border-radius: 8px; padding: 6px 8px; font-size: 12px; box-sizing: border-box; font-family: inherit; min-width: 0; }
+.xd-otp button { background: #0284C7; color: #fff; border: none; border-radius: 8px; padding: 6px 12px; font-size: 12px; cursor: pointer; white-space: nowrap; }
+.xd-otp button:disabled { background: #9CA3AF; cursor: default; }
+.xd-otp .xd-otp-demo { margin-top: 4px; font-size: 11px; color: #0C4A6E; }
+.xd-otp .xd-otp-done { margin-top: 8px; padding: 8px 12px; background: #F0FDF4; border: 1px solid #BBF7D0; color: #15803D; border-radius: 10px; font-size: 12px; }
 `;
 
 export class ChatWidget extends HTMLElement {
@@ -128,6 +144,7 @@ export class ChatWidget extends HTMLElement {
   private unread = 0;
   private initialized = false;
   private csatShown = false; // V2.0 CSAT：每个会话转人工后只弹出一次打分
+  private otpShown = false; // V2.0 OTP：每个会话敏感引导只弹出一次验证卡片
   private panelOpen = false;
   private queueTipEl: HTMLElement | null = null;
   private queueTimer: number | null = null;
@@ -194,6 +211,7 @@ export class ChatWidget extends HTMLElement {
         </div>
         <div class="xd-messages"></div>
         <div class="xd-chips"></div>
+        <div class="xd-disclaimer">AI 客服提供的信息仅供参考，涉及交易 / 价格以结算页或人工客服最终确认为准</div>
         <form class="xd-input-bar" onsubmit="event.preventDefault()">
           <input placeholder="输入你的问题…" autocomplete="off" />
           <button type="submit">发送</button>
@@ -430,6 +448,12 @@ export class ChatWidget extends HTMLElement {
     const quickReplies = (lastMeta.quick_replies as { label: string; value: string }[]) || [];
     if (quickReplies.length) this.renderChips(quickReplies);
 
+    // V2.0 OTP：涉及账户安全的敏感引导 → 弹出手机号验证卡片（每会话一次）
+    if (!this.otpShown && OTP_TRIGGER_RE.test(content)) {
+      this.otpShown = true;
+      row.appendChild(this.buildOtpCard());
+    }
+
     // floating 模式：面板关闭时累计未读
     if (!this.panelOpen && this.unread >= 0) {
       this.unread += 1;
@@ -522,6 +546,71 @@ export class ChatWidget extends HTMLElement {
     } catch (err) {
       console.error("[xd-chat] handover failed:", err);
     }
+  }
+
+  // ---------------- V2.0 OTP 聊天内验证卡片（plan 3.1-5②，Mock 短信演示） ----------------
+  private buildOtpCard(): HTMLElement {
+    const card = document.createElement("div");
+    card.className = "xd-otp";
+    card.innerHTML =
+      `<div class="xd-otp-q">涉及账户安全操作，需要先验证手机号（演示环境，验证码直接展示）</div>` +
+      `<div class="xd-otp-row"><input placeholder="请输入手机号" inputmode="numeric" /></div>` +
+      `<div class="xd-otp-row" style="display:none"><input placeholder="6 位验证码" inputmode="numeric" /><button class="xd-otp-verify">验证</button></div>` +
+      `<button class="xd-otp-send">发送验证码</button>`;
+    const phoneInput = card.querySelector<HTMLInputElement>("input[placeholder='请输入手机号']")!;
+    const codeRow = card.querySelector<HTMLElement>(".xd-otp-row:nth-of-type(2)")!;
+    const codeInput = card.querySelector<HTMLInputElement>("input[placeholder='6 位验证码']")!;
+    const sendBtn = card.querySelector<HTMLButtonElement>("button.xd-otp-send")!;
+    const verifyBtn = card.querySelector<HTMLButtonElement>("button.xd-otp-verify")!;
+
+    sendBtn.addEventListener("click", async () => {
+      const phone = phoneInput.value.trim();
+      if (!/^1\d{10}$/.test(phone)) {
+        window.alert("请输入 11 位手机号");
+        return;
+      }
+      sendBtn.disabled = true;
+      try {
+        const res = await sendOtp({
+          session_id: this.sessionId,
+          visitor_token: this.visitorToken,
+          phone,
+        });
+        // 演示模式：后端直接返回验证码；生产接入短信服务后此段不展示
+        const demo = document.createElement("div");
+        demo.className = "xd-otp-demo";
+        demo.textContent = res.mock && res.code
+          ? `演示模式验证码：${res.code}（${res.ttl_minutes} 分钟内有效）`
+          : `验证码已发送至 ${phone}（${res.ttl_minutes} 分钟内有效）`;
+        card.appendChild(demo);
+        codeRow.style.display = "flex";
+        sendBtn.textContent = "重新发送";
+        sendBtn.disabled = false;
+      } catch (err) {
+        sendBtn.disabled = false;
+        window.alert(`发送失败：${String(err)}`);
+      }
+    });
+
+    verifyBtn.addEventListener("click", async () => {
+      verifyBtn.disabled = true;
+      try {
+        await verifyOtp({
+          session_id: this.sessionId,
+          visitor_token: this.visitorToken,
+          phone: phoneInput.value.trim(),
+          code: codeInput.value.trim(),
+        });
+        const done = document.createElement("div");
+        done.className = "xd-otp-done";
+        done.textContent = "手机号验证通过，可继续安全操作（有效期内会话已标记）";
+        card.replaceWith(done);
+      } catch (err) {
+        verifyBtn.disabled = false;
+        window.alert(`验证失败：${String(err)}`);
+      }
+    });
+    return card;
   }
 
   // ---------------- V2.0 排队进度：WebSocket 实时（失败自动降级 V1.5 轮询） ----------------

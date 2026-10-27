@@ -110,6 +110,30 @@ async def chat_stream(req: ChatStreamRequest, request: Request):
     if session is None:
         raise HTTPException(status_code=404, detail="session not found")
 
+    # 2.1) V2.0 会话超时复位（plan 3.1-4）：30 分钟无操作自动结束，视为新会话（历史保留查阅）
+    from datetime import datetime
+
+    try:
+        _idle = (datetime.now() - datetime.strptime(session["updated_at"], "%Y-%m-%d %H:%M:%S")).total_seconds()
+    except Exception:  # pragma: no cover
+        _idle = 0
+    if _idle > settings.SESSION_TIMEOUT_MINUTES * 60:
+        db.reset_session(req.session_id)
+        session = db.get_session(req.session_id)
+
+    # 2.2) V2.0 确认状态超时取消（plan 5.3）：30 秒无回复自动回到自由对话（pending 为预留机制，防御性清除）
+    _meta = dict(session.get("meta", {}))
+    if _meta.get("pending_faq_id"):
+        try:
+            _pending_at = datetime.strptime(str(_meta.get("pending_at", "2000-01-01 00:00:00")), "%Y-%m-%d %H:%M:%S")
+            if (datetime.now() - _pending_at).total_seconds() > settings.CONFIRM_TIMEOUT_SECONDS:
+                _meta.pop("pending_faq_id", None)
+                _meta.pop("pending_at", None)
+                db.update_session(req.session_id, meta=_meta)
+                session = db.get_session(req.session_id)
+        except ValueError:  # pragma: no cover
+            pass
+
     # 2.5) V2.0 Kill Switch：全局转人工半切（不走检索/LLM，直接登记人工）
     if runtime.is_handover_all:
         db.add_message(req.session_id, "user", req.message)
@@ -211,10 +235,15 @@ async def chat_stream(req: ChatStreamRequest, request: Request):
                 elif ev["type"] == "done":
                     handover = bool(ev["data"].get("handover"))
                     handover_summary = ev["data"].get("handover_summary", "")
+                    # V2.0 防死循环计数（plan 6.2-2）：未解决（转人工）→ +1 封顶，正常闭环 → 归零
+                    _m2 = dict(session.get("meta", {}))
+                    _streak = int(_m2.get("unresolved_streak", 0) or 0)
+                    _m2["unresolved_streak"] = min(_streak + 1, settings.REPEAT_UNRESOLVED_LIMIT + 1) if handover else 0
                     if ev["data"].get("clear_pending"):
-                        meta = dict(session.get("meta", {}))
-                        meta.pop("pending_faq_id", None)
-                        db.update_session(req.session_id, meta=meta, status="AGENT_ACTIVE")
+                        _m2.pop("pending_faq_id", None)
+                        db.update_session(req.session_id, meta=_m2, status="AGENT_ACTIVE")
+                    else:
+                        db.update_session(req.session_id, meta=_m2)
                 yield _sse(ev["type"], ev["data"])
         finally:
             # 落库：assistant 消息

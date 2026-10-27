@@ -166,6 +166,19 @@ class Database:
         """登录瞬间绑定：anonymous_session_id ↔ user_id。"""
         self.update_session(session_id, user_id=user_id)
 
+    def reset_session(self, session_id: str) -> None:
+        """V2.0 会话超时复位（plan 3.1-4）：30 分钟无操作视为新会话，
+        状态/轮次/meta 全部重置（历史消息保留用于查阅，不进入 Prompt）。"""
+        now = time.strftime("%Y-%m-%d %H:%M:%S")
+        with self._lock:
+            conn = self._connect()
+            conn.execute(
+                "UPDATE sessions SET status='AGENT_ACTIVE', turn_count=0, meta='{}', updated_at=? WHERE id=?",
+                (now, session_id),
+            )
+            conn.commit()
+            conn.close()
+
     # ================= 消息 =================
     def add_message(self, session_id: str, role: str, content: str) -> int:
         now = time.strftime("%Y-%m-%d %H:%M:%S")

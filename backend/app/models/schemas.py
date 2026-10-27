@@ -95,6 +95,20 @@ class CsatSubmitRequest(BaseModel):
     comment: str = ""
 
 
+# ---------- V2.0 OTP 聊天内验证（plan 3.1-5②） ----------
+class OtpSendRequest(BaseModel):
+    session_id: str
+    visitor_token: str
+    phone: str = Field(..., min_length=5, max_length=20, description="接收验证码的手机号")
+
+
+class OtpVerifyRequest(BaseModel):
+    session_id: str
+    visitor_token: str
+    phone: str = Field(..., min_length=5, max_length=20)
+    code: str = Field(..., min_length=4, max_length=8, description="收到的验证码")
+
+
 # ---------- 响应 ----------
 class ChatInitResponse(BaseModel):
     session_id: str

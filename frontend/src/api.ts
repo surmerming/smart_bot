@@ -205,6 +205,24 @@ export function fetchCsat(): Promise<{ csat_total: number; csat_avg: number | nu
   return get("/api/v1/ops/csat");
 }
 
+// ---------------- V2.0 OTP 聊天内验证（plan 3.1-5②，Mock 短信演示） ----------------
+export function sendOtp(payload: {
+  session_id: string;
+  visitor_token: string;
+  phone: string;
+}): Promise<{ ok: boolean; sent: boolean; ttl_minutes: number; code?: string; mock?: boolean }> {
+  return post("/api/v1/otp/send", payload);
+}
+
+export function verifyOtp(payload: {
+  session_id: string;
+  visitor_token: string;
+  phone: string;
+  code: string;
+}): Promise<{ ok: boolean; verified: boolean; ttl_minutes: number }> {
+  return post("/api/v1/otp/verify", payload);
+}
+
 // ---------------- V2.0 坐席 AI Copilot ----------------
 
 export interface CopilotTicket {

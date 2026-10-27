@@ -20,6 +20,7 @@ from app.agent.prompts import (
     HANDOVER_HARD_MSG,
     HANDOVER_SOFT_MSG,
     RED_LIGHT_MSG,
+    REPEATED_UNRESOLVED_MSG,
     UNKNOWN_FALLBACK_MSG,
     build_system_prompt,
     format_context,
@@ -94,6 +95,13 @@ class Orchestrator:
         # ---- 1. 用户主动要求转人工：立即转，不挽留 ----
         if wants_human(query):
             async for ev in self._hard_handover(query, history, reason="user_request", message_id=message_id):
+                yield ev
+            return
+
+        # ---- 1.5 防死循环（plan 6.2-2 / V1.0 P0）：连续 N 轮未解决 → 主动切断转人工 ----
+        # 计数由 chat 层在 done 后维护：handover → +1，正常闭环 → 归零
+        if int(meta.get("unresolved_streak", 0) or 0) >= settings.REPEAT_UNRESOLVED_LIMIT:
+            async for ev in self._hard_handover(query, history, reason="repeated_unresolved", message_id=message_id):
                 yield ev
             return
 
@@ -204,8 +212,10 @@ class Orchestrator:
 
         # 幽默开关：只有售前类 + 情绪绿灯 才允许幽默点缀（设计稿 6.4）
         humor_on = faq.category in _HUMOR_ALLOWED_CATEGORIES and emotion == "LEVEL_0"
-        # 严肃场景（售后/交易/账户）强制正经：humor_rule 视同情绪不佳处理
-        system = build_system_prompt("LEVEL_0" if humor_on else "LEVEL_2")
+        # V2.0 补齐：幽默分段生成（plan 5.5）——第一步事实版一律用正经 Prompt，
+        # 幽默由第二步 polish_answer 统一润色（关键信息一致性校验，不一致回退事实版）。
+        # 非幽默场景保持单段流式（首字延迟优先）。
+        system = build_system_prompt("LEVEL_2")
 
         ctx = format_context(results)
         hist = format_history(history)
@@ -248,9 +258,21 @@ class Orchestrator:
 
         full = ""
         try:
-            async for token in llm.stream_chat(messages, temperature=0.4 if humor_on else 0.2):
-                full += token
-                yield {"type": "text", "data": {"content": token}}
+            if humor_on:
+                # 两段式：先流式攒事实版 → 幽默润色（校验不通过回退事实版）→ 流式输出最终版
+                async for token in llm.stream_chat(messages, temperature=0.2):
+                    full += token
+                from app.agent.humor import polish_answer
+
+                polished = await polish_answer(full, query)
+                if polished:
+                    full = polished
+                for chunk in _chunk_text(full):
+                    yield {"type": "text", "data": {"content": chunk}}
+            else:
+                async for token in llm.stream_chat(messages, temperature=0.2):
+                    full += token
+                    yield {"type": "text", "data": {"content": token}}
         except Exception as exc:
             logger.error("生成失败：%s", exc)
             full = UNKNOWN_FALLBACK_MSG
@@ -344,6 +366,8 @@ class Orchestrator:
             text = faq.answer if faq else RED_LIGHT_MSG
         elif reason == "user_request":
             text = HANDOVER_HARD_MSG
+        elif reason == "repeated_unresolved":
+            text = REPEATED_UNRESOLVED_MSG
         else:
             text = UNKNOWN_FALLBACK_MSG
 
