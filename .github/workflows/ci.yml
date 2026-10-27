@@ -24,7 +24,7 @@ jobs:
       - name: API tests (Mock LLM, offline)
         run: |
           cd backend
-          python -m pytest tests/test_api.py tests/test_badcase_report.py -q
+          python -m pytest tests/test_api.py tests/test_badcase_report.py tests/test_v2_ws_copilot.py -q
 
       - name: Retrieval evaluation (golden dataset)
         run: |

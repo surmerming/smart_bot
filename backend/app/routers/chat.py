@@ -1,6 +1,7 @@
 """核心对话路由：/api/v1/chat/init、/api/v1/chat/stream(SSE)、/api/v1/handover。"""
 from __future__ import annotations
 
+import asyncio
 import json
 import logging
 import uuid
@@ -193,6 +194,8 @@ async def chat_stream(req: ChatStreamRequest, request: Request):
             session_status = "HANDOVER"
             db.update_session(req.session_id, status="HANDOVER")
             queue_id = db.enqueue_handover(req.session_id, handover_summary or req.message)
+            # V2.0：实时广播新待办 + 用户排队进度 + 异步生成工单卡片（不阻塞 SSE）
+            await _notify_and_build_copilot(queue_id, req.session_id)
         else:
             queue_id = None
             db.update_session(req.session_id, status=session_status)
@@ -231,4 +234,26 @@ async def handover(req: HandoverRequest):
     )
     qid = db.enqueue_handover(req.session_id, summary, req.contact)
     db.update_session(req.session_id, status="HANDOVER")
+    await _notify_and_build_copilot(qid, req.session_id)
     return HandoverResponse(queue_id=qid, message="已登记，人工客服上线后会第一时间回复您。")
+
+
+async def _notify_and_build_copilot(queue_id: int, session_id: str) -> None:
+    """V2.0：转人工后 WebSocket 广播 + 后台异步生成工单卡片。"""
+    try:
+        from app.routers.ws import manager
+
+        await manager.broadcast_new_handover(queue_id)
+        await manager.notify_user_queue(session_id)
+    except Exception as exc:  # pragma: no cover
+        logger.warning("WS 广播失败：%s", exc)
+
+    async def _build() -> None:
+        from app.agent.copilot import build_copilot_for
+
+        try:
+            await build_copilot_for(queue_id, session_id)
+        except Exception as exc:  # pragma: no cover
+            logger.warning("Copilot 工单卡片生成失败：%s", exc)
+
+    asyncio.create_task(_build())

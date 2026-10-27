@@ -65,6 +65,12 @@ class MockLLM:
         if "改写后" in hint and "标准问法" in hint:
             # Query Rewrite：Mock 不实质改写，原样返回（保证离线检索行为稳定）
             return user
+        if "order_info" in hint and "bot_answered" in hint and "issue" in hint:
+            # 转人工摘要 / Copilot 工单卡片：Mock 返回固定 JSON
+            return ('{"user_intent": "客户投诉售后问题，要求人工处理", '
+                    '"order_info": "JD202610270001", '
+                    '"bot_answered": "已解释7天无理由退货政策", '
+                    '"issue": "客户坚持要求人工介入"}')
         if "user_intent" in hint and "只输出 JSON" in hint:
             # L3 结构化事实提取：Mock 返回稳定 JSON
             import json as _json
@@ -76,6 +82,9 @@ class MockLLM:
         if "不超过 100 字" in hint and "摘要" in hint:
             # L2 摘要压缩：Mock 简单截断模拟
             return (user[:50] + "…") if len(user) > 50 else user
+        if "快捷回复模板" in hint and "「|」" in hint:
+            # 坐席 Copilot 回复模板：Mock 返回固定模板
+            return "非常抱歉给您带来不便，我马上为您核实处理～|方便提供一下订单号吗？我帮您优先处理|预计 10 分钟内给您明确答复，请稍等～"
         if "IN_KNOWLEDGE" in hint and "OUT_OF_SCOPE" in hint:
             return "IN_KNOWLEDGE"
         if "只输出 true 或 false" in hint:

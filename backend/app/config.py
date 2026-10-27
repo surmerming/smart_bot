@@ -73,6 +73,9 @@ class Settings:
     VISITOR_TOKEN_SECRET: str = _env_str("VISITOR_TOKEN_SECRET", "change-me-in-production")
     VISITOR_TOKEN_TTL_HOURS: int = _env_int("VISITOR_TOKEN_TTL_HOURS", 24)
 
+    # --- V2.0 坐席 WebSocket 鉴权（留空=开发期放行；生产建议设置）---
+    AGENT_WS_TOKEN: str = _env_str("AGENT_WS_TOKEN", "")
+
     # 软转人工 / 红灯转人工时前端可点击的快捷回复
     HANDOVER_QUICK_REPLIES: list = [
         {"label": "继续咨询其他问题", "value": "好的，继续聊其他问题"},

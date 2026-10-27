@@ -139,3 +139,32 @@ export function fetchBadCases(limit = 20): Promise<BadCaseItem[]> {
 export async function completeHandover(queueId: number): Promise<{ ok: boolean; queue_id: number }> {
   return post(`/api/v1/ops/handovers/${queueId}/complete`, {});
 }
+
+// ---------------- V2.0 坐席 AI Copilot ----------------
+
+export interface CopilotTicket {
+  user_intent?: string;
+  order_info?: string;
+  bot_answered?: string;
+  issue?: string;
+}
+
+export interface CopilotPayload {
+  ticket?: CopilotTicket;
+  templates?: string[];
+}
+
+export function fetchCopilot(queueId: number): Promise<{ queue_id: number; session_id: string; copilot: CopilotPayload }> {
+  return get(`/api/v1/ops/copilot/${queueId}`);
+}
+
+export function generateTemplates(queueId: number): Promise<{ queue_id: number; templates: string[] }> {
+  return post(`/api/v1/ops/copilot/templates?queue_id=${queueId}`, {});
+}
+
+export function copilotQuery(
+  queueId: number,
+  action: "logistics" | "order" | "refund",
+): Promise<{ action: string; result: string; mock: boolean }> {
+  return post(`/api/v1/ops/copilot/query?queue_id=${queueId}&action=${action}`, {});
+}

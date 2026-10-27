@@ -7,7 +7,7 @@ PY="$ROOT/backend/.venv/bin/python"
 [ -x "$PY" ] || PY=python3
 
 echo "== 1/4 后端 API 测试（Mock，离线） =="
-(cd "$ROOT/backend" && "$PY" -m pytest tests/test_api.py tests/test_badcase_report.py -q)
+(cd "$ROOT/backend" && "$PY" -m pytest tests/test_api.py tests/test_badcase_report.py tests/test_v2_ws_copilot.py -q)
 
 echo ""
 echo "== 2/4 检索评估（黄金测试集） =="

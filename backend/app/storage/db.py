@@ -74,6 +74,10 @@ class Database:
             );
             """
         )
+        # V2.0 迁移：坐席 Copilot 数据列（工单卡片 + 回复模板），旧库自动加列
+        cols = [r[1] for r in conn.execute("PRAGMA table_info(handover_queue)").fetchall()]
+        if "copilot" not in cols:
+            conn.execute("ALTER TABLE handover_queue ADD COLUMN copilot TEXT DEFAULT '{}'")
         conn.commit()
         conn.close()
 
@@ -252,6 +256,39 @@ class Database:
             "status": row["status"],
             "created_at": row["created_at"],
         }
+
+    def get_waiting_by_session(self, session_id: str) -> Optional[dict]:
+        """某会话当前 waiting 的排队项（WebSocket 建连时推送进度用）。"""
+        with self._lock:
+            conn = self._connect()
+            row = conn.execute(
+                "SELECT * FROM handover_queue WHERE session_id=? AND status='waiting' "
+                "ORDER BY id ASC LIMIT 1",
+                (session_id,),
+            ).fetchone()
+            conn.close()
+        return dict(row) if row else None
+
+    # ================= 坐席 Copilot（V2.0）=================
+    def set_copilot(self, queue_id: int, copilot: dict) -> None:
+        with self._lock:
+            conn = self._connect()
+            conn.execute(
+                "UPDATE handover_queue SET copilot=? WHERE id=?",
+                (json.dumps(copilot, ensure_ascii=False), queue_id),
+            )
+            conn.commit()
+            conn.close()
+
+    def get_handover_copilot(self, queue_id: int) -> dict:
+        row = self.get_handover(queue_id)
+        if not row:
+            return {}
+        try:
+            data = json.loads(row.get("copilot") or "{}")
+            return data if isinstance(data, dict) else {}
+        except json.JSONDecodeError:
+            return {}
 
     # ================= 运营统计（6.1 科学统计口径）=================
     def session_stats(self) -> dict:

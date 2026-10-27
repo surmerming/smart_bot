@@ -120,6 +120,7 @@ export class ChatWidget extends HTMLElement {
   private panelOpen = false;
   private queueTipEl: HTMLElement | null = null;
   private queueTimer: number | null = null;
+  private queueWs: WebSocket | null = null;
 
   private shadow = this.attachShadow({ mode: "open" });
   private elFab!: HTMLElement;
@@ -353,10 +354,10 @@ export class ChatWidget extends HTMLElement {
             botMsg.messageId = String(ev.data.message_id ?? "");
             botMsg.handover = Boolean(ev.data.handover);
           }
-          // V1.5：转人工后拿到 queue_id，轮询排队进度
+          // V1.5+：转人工后拿 queue_id → V2.0 优先 WebSocket 实时排队，失败降级轮询
           if (ev.event === "summary") {
             const qid = ev.data.queue_id;
-            if (typeof qid === "number" && qid > 0) this.startQueuePolling(qid);
+            if (typeof qid === "number" && qid > 0) this.startQueueLive(qid);
           }
         },
       );
@@ -460,9 +461,78 @@ export class ChatWidget extends HTMLElement {
     }
   }
 
-  // ---------------- V1.5 排队进度轮询（轻量轮询，无 WebSocket） ----------------
+  // ---------------- V2.0 排队进度：WebSocket 实时（失败自动降级 V1.5 轮询） ----------------
+  private wsUrl(path: string): string {
+    if (this.apiBase) {
+      return `${this.apiBase.replace(/^http/, "ws")}${path}`;
+    }
+    const proto = location.protocol === "https:" ? "wss://" : "ws://";
+    return `${proto}${location.host}${path}`;
+  }
+
+  private startQueueLive(queueId: number) {
+    this.stopQueueLive();
+    this.stopQueuePolling();
+    let ws: WebSocket;
+    try {
+      ws = new WebSocket(
+        this.wsUrl(
+          `/ws/user?session_id=${encodeURIComponent(this.sessionId)}&visitor_token=${encodeURIComponent(this.visitorToken)}`,
+        ),
+      );
+    } catch {
+      this.startQueuePolling(queueId);
+      return;
+    }
+    this.queueWs = ws;
+    ws.onmessage = (msg) => {
+      let data: { type?: string; queue_id?: number; position?: number | null; ahead?: number | null; status?: string };
+      try {
+        data = JSON.parse(String(msg.data));
+      } catch {
+        return;
+      }
+      const tip = this.queueTipEl;
+      if (!tip) return;
+      if (data.type === "queue") {
+        if (data.status === "waiting") {
+          tip.textContent =
+            data.position && data.position > 0
+              ? `已转人工排队：前面还有 ${data.ahead ?? 0} 人，客服上线后第一时间回复，排队期间可继续咨询其他问题。`
+              : "已转人工排队：客服上线后第一时间回复，排队期间可继续咨询其他问题。";
+        } else if (data.status === "done") {
+          tip.textContent = "人工客服已接入，正在为您服务。";
+          this.stopQueueLive();
+        }
+      } else if (data.type === "agent_joined") {
+        tip.textContent = "人工客服已接入，正在为您服务。";
+        this.stopQueueLive();
+      }
+    };
+    ws.onerror = () => this.fallbackPolling(queueId);
+    ws.onclose = () => this.fallbackPolling(queueId);
+  }
+
+  private fallbackPolling(queueId: number) {
+    // stopQueueLive 主动关闭会先把 onclose 置空，不会走到这里；走到这里说明连接确实断了 → 降级轮询
+    if (this.queueWs === null) return;
+    this.queueWs = null;
+    this.startQueuePolling(queueId);
+  }
+
+  private stopQueueLive() {
+    if (this.queueWs !== null) {
+      const ws = this.queueWs;
+      this.queueWs = null;
+      ws.onclose = null;
+      ws.close();
+    }
+  }
+
+  // ---------------- V1.5 排队进度轮询（WebSocket 不可用时的降级） ----------------
   private startQueuePolling(queueId: number) {
     this.stopQueuePolling();
+    this.stopQueueLive();
     const poll = async () => {
       try {
         const st = await fetchQueueStatus(queueId);

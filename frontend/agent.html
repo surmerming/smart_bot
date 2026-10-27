@@ -34,6 +34,25 @@
       .done-card .badge { background: #F0FDF4; border-color: #BBF7D0; color: #16A34A; }
       .sec-title { font-size: 13px; font-weight: 600; color: #6B7280; margin: 22px 0 10px; display: flex; align-items: center; gap: 8px; }
       .sec-title .cnt { background: #E8F1FC; color: #0066CC; border-radius: 10px; padding: 1px 8px; font-size: 12px; }
+      .ws-state { margin-left: auto; font-size: 12px; padding: 5px 12px; border-radius: 999px; border: 1px solid #3F3F46; color: #D4D4D8; }
+      .ws-state.on { border-color: #22C55E; color: #4ADE80; }
+      .ws-state.off { border-color: #F59E0B; color: #FBBF24; }
+      /* V2.0 AI Copilot */
+      .copilot { margin-top: 12px; border-top: 1px dashed #E7E8EA; padding-top: 10px; }
+      .copilot-title { font-size: 12px; font-weight: 700; color: #0066CC; margin-bottom: 8px; }
+      .ticket { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 14px; font-size: 12px; background: #F8FAFC; border: 1px solid #EEF0F2; border-radius: 8px; padding: 10px 12px; margin-bottom: 10px; }
+      .ticket .k { color: #6B7280; }
+      .ticket .v { color: #111214; word-break: break-all; }
+      .copilot-btns { display: flex; flex-wrap: wrap; gap: 8px; }
+      .copilot-btns button { font-size: 12px; padding: 6px 12px; border-radius: 7px; border: 1px solid #CBD5E1; background: #fff; color: #0F172A; cursor: pointer; }
+      .copilot-btns button.primary { background: #0066CC; border-color: #0066CC; color: #fff; }
+      .copilot-btns button:hover { opacity: .85; }
+      .templates { margin-top: 10px; display: grid; gap: 8px; }
+      .template { position: relative; background: #F0F7FF; border: 1px solid #D6E9FF; border-radius: 8px; padding: 10px 12px; font-size: 12px; line-height: 1.6; }
+      .template button { position: absolute; right: 8px; top: 8px; font-size: 11px; padding: 3px 8px; border: none; background: #0066CC; color: #fff; border-radius: 6px; cursor: pointer; }
+      .query-result { margin-top: 10px; font-size: 12px; background: #FFFBEB; border: 1px solid #FDE68A; border-radius: 8px; padding: 10px 12px; line-height: 1.6; }
+      .query-result .mock-tag { display: inline-block; background: #F59E0B; color: #fff; font-size: 10px; border-radius: 4px; padding: 1px 6px; margin-right: 6px; }
+      .copilot-loading { font-size: 12px; color: #9CA3AF; }
     </style>
   </head>
   <body>
@@ -41,8 +60,9 @@
       <div class="logo">答</div>
       <div>
         <h1>小答 · 坐席工作台</h1>
-        <div class="sub">转人工待办 / 黄金摘要 / 留言回复</div>
+        <div class="sub">转人工待办 / AI Copilot（工单卡片 + 快捷回复 + 内部系统查询）</div>
       </div>
+      <div class="ws-state" id="ws-state">连接中…</div>
       <div class="actions">
         <button id="refresh" class="ghost">刷新</button>
       </div>

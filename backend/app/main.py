@@ -53,8 +53,9 @@ async def health():
     }
 
 
-from app.routers import chat, ops, session  # noqa: E402
+from app.routers import chat, ops, session, ws  # noqa: E402
 
 app.include_router(chat.router)
 app.include_router(session.router)
 app.include_router(ops.router)
+app.include_router(ws.router)
