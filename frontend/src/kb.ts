@@ -9,6 +9,7 @@ import {
   fetchVersions,
   KB_ACTIONS,
   rejectDraft,
+  rollbackVersion,
   submitDraft,
   updateFAQ,
   rebuildKB,
@@ -196,7 +197,8 @@ async function renderVersions(): Promise<void> {
       `<td>${actionBadge[v.action] ?? esc(v.action)}</td>` +
       `<td>${esc(v.operator)}</td>` +
       `<td>` +
-      `<button class="btn ghost small" data-act="toggle-snap" data-id="${v.id}">查看快照</button>` +
+      `<button class="btn ghost small" data-act="toggle-snap" data-id="${v.id}">查看快照</button> ` +
+      `<button class="btn warn small" data-act="rollback" data-id="${v.id}">回滚到此版本</button>` +
       `<div class="versions-snapshot" id="snap-${v.id}">${esc(snapshotText)}</div>` +
       `</td>`;
     tbody.appendChild(tr);
@@ -266,6 +268,22 @@ async function onFaqAction(act: string, id: string): Promise<void> {
       toast(`已生成删除草稿 #${r.draft_id}，待审批`);
       await reload();
     }
+  } catch (err) {
+    toast(String(err), true);
+  }
+}
+
+async function onVersionAction(act: string, idStr: string): Promise<void> {
+  const id = Number(idStr);
+  if (act !== "rollback") return;
+  const v = versionList.find((x) => x.id === id);
+  const label = v ? `${v.faq_id} · ${v.action} · ${v.created_at}` : `#${id}`;
+  if (!window.confirm(`确认回滚到版本「${label}」？\n将生成变更草稿并自动提交审核，主管审批通过后生效。`)) return;
+  try {
+    const r = await rollbackVersion(id, role);
+    toast(`已基于版本 #${id} 生成回滚草稿 #${r.draft_id}（${r.action} ${r.faq_id}）并提交审核`);
+    switchTab("drafts");
+    await reload();
   } catch (err) {
     toast(String(err), true);
   }
@@ -361,9 +379,12 @@ function bind(): void {
   });
   $("version-tbody").addEventListener("click", (e) => {
     const btn = (e.target as HTMLElement).closest("button[data-act]") as HTMLButtonElement | null;
-    if (btn && btn.dataset.act === "toggle-snap") {
+    if (!btn) return;
+    if (btn.dataset.act === "toggle-snap") {
       const snap = document.getElementById(`snap-${btn.dataset.id}`) as HTMLDivElement;
       if (snap) snap.classList.toggle("show");
+    } else if (btn.dataset.act === "rollback") {
+      void onVersionAction(btn.dataset.act, btn.dataset.id!);
     }
   });
 }

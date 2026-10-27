@@ -20,6 +20,7 @@ from app.models.schemas import (
     FAQCreateRequest,
     FAQPayload,
     FAQUpdateRequest,
+    RollbackRequest,
 )
 from app.storage.db import db
 from app.storage.kb import kb
@@ -247,6 +248,47 @@ async def kb_draft_delete(draft_id: int):
 @router.get("/versions")
 async def kb_versions(faq_id: str | None = None, limit: int = 50):
     return db.list_faq_versions(faq_id, limit)
+
+
+@router.post("/versions/{version_id}/rollback")
+async def kb_version_rollback(version_id: int, req: RollbackRequest):
+    """一键回滚到历史版本：基于版本快照生成变更草稿并自动提交审核，主管审批通过后生效。
+
+    - 快照对应 FAQ 当前仍存在 → 生成 update 草稿（内容覆盖为该版本）
+    - 快照对应 FAQ 已被删除 → 生成 create 草稿（按原 id 恢复）
+    - 当前内容已与该版本一致 → 409 提示无需回滚
+    """
+    v = db.get_faq_version(version_id)
+    if not v:
+        raise HTTPException(status_code=404, detail=f"版本记录 {version_id} 不存在")
+    snapshot = v.get("snapshot")
+    if not snapshot or not isinstance(snapshot, dict):
+        raise HTTPException(status_code=409, detail=f"版本 {version_id} 无快照，无法回滚")
+    faq_id = snapshot.get("id")
+    if not faq_id:
+        raise HTTPException(status_code=409, detail="版本快照缺少 FAQ id，无法回滚")
+
+    current = kb.get_faq(faq_id)
+    if current is not None:
+        if current.to_dict() == snapshot:
+            raise HTTPException(status_code=409, detail=f"FAQ {faq_id} 当前内容已与该版本一致，无需回滚")
+        action = "update"
+    else:
+        action = "create"
+
+    draft_id = db.create_faq_draft(faq_id, action, snapshot, req.created_by)
+    # 一键回滚：生成草稿后自动提交审核（回滚同样走审批流铁律）
+    db.set_faq_draft_status(draft_id, "pending")
+    logger.info("知识库回滚：%s %s → 版本 %s（draft=%s，operator=%s）",
+                action, faq_id, version_id, draft_id, req.created_by)
+    return {
+        "ok": True,
+        "draft_id": draft_id,
+        "faq_id": faq_id,
+        "action": action,
+        "status": "pending",
+        "message": f"已基于版本 {version_id} 生成回滚草稿并提交审核，主管审批通过后生效",
+    }
 
 
 @router.post("/rebuild")

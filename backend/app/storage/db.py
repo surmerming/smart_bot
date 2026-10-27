@@ -447,6 +447,21 @@ class Database:
             conn.close()
             return vid
 
+    def get_faq_version(self, version_id: int) -> Optional[dict]:
+        """单条版本记录（回滚用）。"""
+        with self._lock:
+            conn = self._connect()
+            row = conn.execute("SELECT * FROM faq_versions WHERE id=?", (version_id,)).fetchone()
+            conn.close()
+        if not row:
+            return None
+        d = dict(row)
+        try:
+            d["snapshot"] = json.loads(d.get("snapshot") or "null")
+        except json.JSONDecodeError:
+            d["snapshot"] = None
+        return d
+
     def list_faq_versions(self, faq_id: str | None = None, limit: int = 50) -> list[dict]:
         with self._lock:
             conn = self._connect()

@@ -70,6 +70,11 @@ class DraftReviewRequest(BaseModel):
     reason: Optional[str] = Field(None, max_length=500, description="驳回原因，可选")
 
 
+class RollbackRequest(BaseModel):
+    """一键回滚到历史版本（回滚操作人）。"""
+    created_by: str = Field("ops", max_length=64)
+
+
 # ---------- 响应 ----------
 class ChatInitResponse(BaseModel):
     session_id: str

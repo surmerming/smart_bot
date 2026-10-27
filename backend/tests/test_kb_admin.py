@@ -229,3 +229,81 @@ def test_list_filter_and_draft_badge():
 
     # 新 FAQ 出现在列表并带草稿标记
     assert data["faqs"][0].get("draft_status") is None  # 现有 FAQ 无草稿
+
+
+# ================= 一键回滚 =================
+def _edit_and_publish(faq_id: str, answer: str):
+    """编辑 FAQ 答案并走完审批，返回 (版本列表)。"""
+    original = client.get(f"/api/v1/kb/faqs/{faq_id}").json()
+    original.pop("id", None)
+    original["answer"] = answer
+    draft_id, _ = _create_draft(client, faq_id=faq_id, payload=original)
+    client.post(f"/api/v1/kb/drafts/{draft_id}/submit", json={})
+    client.post(f"/api/v1/kb/drafts/{draft_id}/approve", json={"reviewed_by": "ops"})
+    return client.get("/api/v1/kb/versions").json()
+
+
+def test_rollback_update_version():
+    # 第一次编辑 faq_001 答案 → v1
+    _edit_and_publish("faq_001", "版本一答案：支持退换，不影响二次销售。")
+    # 第二次编辑 → v2
+    _edit_and_publish("faq_001", "版本二答案：支持退换，需包装齐全。")
+    versions = client.get("/api/v1/kb/versions").json()
+    assert len([v for v in versions if v["faq_id"] == "faq_001"]) == 2
+    v1 = versions[-1]  # 最早的版本（update 到版本一）
+
+    # 回滚到 v1 → 生成 update 草稿并自动提交审核
+    r = client.post(f"/api/v1/kb/versions/{v1['id']}/rollback", json={"created_by": "ops"})
+    assert r.status_code == 200, r.text
+    body = r.json()
+    assert body["action"] == "update" and body["status"] == "pending"
+    assert client.get(f"/api/v1/kb/drafts/{body['draft_id']}").json()["status"] == "pending"
+
+    # 主管审批 → faq_001 答案恢复为版本一
+    client.post(f"/api/v1/kb/drafts/{body['draft_id']}/approve", json={"reviewed_by": "ops"})
+    with open(_KB_COPY, encoding="utf-8") as f:
+        data = json.load(f)
+    target = next(x for x in data["faqs"] if x["id"] == "faq_001")
+    assert target["answer"] == "版本一答案：支持退换，不影响二次销售。"
+    assert client.get("/api/v1/kb/faqs/faq_001").json()["answer"] == "版本一答案：支持退换，不影响二次销售。"
+
+
+def test_rollback_restore_deleted():
+    # 删除 faq_040 并审批生效（版本留删除前快照）
+    r = client.delete("/api/v1/kb/faqs/faq_040?created_by=ops")
+    draft_id = r.json()["draft_id"]
+    client.post(f"/api/v1/kb/drafts/{draft_id}/submit", json={})
+    client.post(f"/api/v1/kb/drafts/{draft_id}/approve", json={"reviewed_by": "ops"})
+    assert client.get("/api/v1/kb/faqs/faq_040").status_code == 404
+
+    del_v = next(v for v in client.get("/api/v1/kb/versions").json() if v["action"] == "delete")
+    # 回滚删除版本 → create 草稿（恢复原 id）
+    r = client.post(f"/api/v1/kb/versions/{del_v['id']}/rollback", json={"created_by": "ops"})
+    assert r.status_code == 200, r.text
+    body = r.json()
+    assert body["action"] == "create" and body["faq_id"] == "faq_040"
+
+    client.post(f"/api/v1/kb/drafts/{body['draft_id']}/approve", json={"reviewed_by": "ops"})
+    assert client.get("/api/v1/kb/faqs/faq_040").json()["standard_question"] == del_v["snapshot"]["standard_question"]
+    with open(_KB_COPY, encoding="utf-8") as f:
+        assert len(json.load(f)["faqs"]) == 40
+
+
+def test_rollback_guards():
+    # 版本不存在 → 404
+    assert client.post("/api/v1/kb/versions/99999/rollback", json={}).status_code == 404
+
+    # 回滚到与当前一致（create 快照 == 当前内容）→ 409
+    _, faq_id = _create_draft(client)
+    # 先取当前无版本时的 create 流程：审批后 create 快照即当前内容
+    drafts = client.get("/api/v1/kb/drafts").json()
+    create_draft = next(d for d in drafts if d["action"] == "create")
+    client.post(f"/api/v1/kb/drafts/{create_draft['id']}/submit", json={})
+    client.post(f"/api/v1/kb/drafts/{create_draft['id']}/approve", json={})
+    create_v = next(v for v in client.get("/api/v1/kb/versions").json() if v["action"] == "create")
+    assert client.post(f"/api/v1/kb/versions/{create_v['id']}/rollback", json={}).status_code == 409
+
+    # 无快照版本 → 409
+    from app.storage.db import db
+    vid = db.add_faq_version("faq_001", "update", None, "ops")
+    assert client.post(f"/api/v1/kb/versions/{vid}/rollback", json={}).status_code == 409

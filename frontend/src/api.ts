@@ -306,6 +306,13 @@ export function fetchVersions(faqId?: string, limit = 50): Promise<KBVersion[]> 
   return get<KBVersion[]>(`/api/v1/kb/versions?${params.toString()}`);
 }
 
+export function rollbackVersion(
+  versionId: number,
+  createdBy = "ops",
+): Promise<{ ok: boolean; draft_id: number; faq_id: string; action: string; status: string; message: string }> {
+  return post(`/api/v1/kb/versions/${versionId}/rollback`, { created_by: createdBy });
+}
+
 export function rebuildKB(): Promise<{ ok: boolean; faqs: number; version: number }> {
   return post("/api/v1/kb/rebuild", {});
 }
