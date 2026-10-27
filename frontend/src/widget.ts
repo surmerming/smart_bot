@@ -8,7 +8,7 @@
  *   - api-base  后端地址（缺省同源，走 /api 代理）
  *   - brand     品牌名（缺省取后端 init 返回）
  */
-import { chatInit, manualHandover, sendFeedback } from "./api";
+import { chatInit, fetchQueueStatus, manualHandover, sendFeedback } from "./api";
 import { postSSE } from "./sse-client";
 
 const STORE_KEY = "xd_anonymous_session_id";
@@ -20,6 +20,7 @@ interface ChatMsg {
   messageId?: string;
   faqIds?: string[];
   handover?: boolean;
+  tipEl?: HTMLElement;
 }
 
 const WIDGET_CSS = `
@@ -117,6 +118,8 @@ export class ChatWidget extends HTMLElement {
   private unread = 0;
   private initialized = false;
   private panelOpen = false;
+  private queueTipEl: HTMLElement | null = null;
+  private queueTimer: number | null = null;
 
   private shadow = this.attachShadow({ mode: "open" });
   private elFab!: HTMLElement;
@@ -350,6 +353,11 @@ export class ChatWidget extends HTMLElement {
             botMsg.messageId = String(ev.data.message_id ?? "");
             botMsg.handover = Boolean(ev.data.handover);
           }
+          // V1.5：转人工后拿到 queue_id，轮询排队进度
+          if (ev.event === "summary") {
+            const qid = ev.data.queue_id;
+            if (typeof qid === "number" && qid > 0) this.startQueuePolling(qid);
+          }
         },
       );
     } catch (err) {
@@ -385,6 +393,8 @@ export class ChatWidget extends HTMLElement {
         tip.className = "xd-handover-tip";
         tip.textContent = "已转人工排队（留言模式）：客服上线后第一时间回复，排队期间可继续咨询其他问题。";
         row.appendChild(tip);
+        botMsg.tipEl = tip;
+        this.queueTipEl = tip;
       }
       const fb = document.createElement("div");
       fb.className = "xd-feedback";
@@ -447,6 +457,39 @@ export class ChatWidget extends HTMLElement {
       if (res.ok) this.pushError(res.message || "已登记转人工");
     } catch (err) {
       console.error("[xd-chat] handover failed:", err);
+    }
+  }
+
+  // ---------------- V1.5 排队进度轮询（轻量轮询，无 WebSocket） ----------------
+  private startQueuePolling(queueId: number) {
+    this.stopQueuePolling();
+    const poll = async () => {
+      try {
+        const st = await fetchQueueStatus(queueId);
+        const tip = this.queueTipEl;
+        if (tip) {
+          if (st.status === "waiting") {
+            tip.textContent = st.position
+              ? `已转人工排队：前面还有 ${st.ahead ?? 0} 人，客服上线后第一时间回复，排队期间可继续咨询其他问题。`
+              : "已转人工排队：客服上线后第一时间回复，排队期间可继续咨询其他问题。";
+          } else if (st.status === "done") {
+            tip.textContent = "人工客服已接入，正在为您服务。";
+            this.stopQueuePolling();
+            return;
+          }
+        }
+        this.queueTimer = window.setTimeout(poll, 5000);
+      } catch {
+        this.queueTimer = window.setTimeout(poll, 8000);
+      }
+    };
+    void poll();
+  }
+
+  private stopQueuePolling() {
+    if (this.queueTimer !== null) {
+      window.clearTimeout(this.queueTimer);
+      this.queueTimer = null;
     }
   }
 }

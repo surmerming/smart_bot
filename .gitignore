@@ -15,3 +15,8 @@ frontend/dist/
 
 # OS
 .DS_Store
+
+# 运行时产物
+*.pid
+*.log
+knowledge_base/suggestions/

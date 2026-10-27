@@ -62,6 +62,20 @@ class MockLLM:
             if any(k in user for k in ("破", "坏", "再也不买", "气死", "太慢")):
                 return "LEVEL_2"
             return "LEVEL_0"
+        if "改写后" in hint and "标准问法" in hint:
+            # Query Rewrite：Mock 不实质改写，原样返回（保证离线检索行为稳定）
+            return user
+        if "user_intent" in hint and "只输出 JSON" in hint:
+            # L3 结构化事实提取：Mock 返回稳定 JSON
+            import json as _json
+
+            return _json.dumps(
+                {"user_intent": user[:24], "order_info": "无", "product": "无", "request": "无"},
+                ensure_ascii=False,
+            )
+        if "不超过 100 字" in hint and "摘要" in hint:
+            # L2 摘要压缩：Mock 简单截断模拟
+            return (user[:50] + "…") if len(user) > 50 else user
         if "IN_KNOWLEDGE" in hint and "OUT_OF_SCOPE" in hint:
             return "IN_KNOWLEDGE"
         if "只输出 true 或 false" in hint:

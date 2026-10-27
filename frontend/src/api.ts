@@ -68,3 +68,74 @@ export async function manualHandover(payload: {
 }): Promise<{ ok: boolean; queue_id?: number; message?: string }> {
   return post("/api/v1/handover", payload);
 }
+
+// ---------------- V1.5 运营 / 坐席 / 排队 ----------------
+
+async function get<T>(path: string): Promise<T> {
+  const resp = await fetch(path);
+  if (!resp.ok) {
+    const text = await resp.text().catch(() => "");
+    throw new Error(`API ${path} 失败(${resp.status}): ${text.slice(0, 120)}`);
+  }
+  return resp.json() as Promise<T>;
+}
+
+export interface QueueStatus {
+  queue_id: number;
+  position: number | null;
+  ahead: number | null;
+  status: string;
+  created_at: string;
+}
+
+export interface OpsStats {
+  total_sessions: number;
+  agent_resolved: number;
+  handover: number;
+  auto_rate: number;
+  handover_rate: number;
+  feedback_total: number;
+  feedback_up: number;
+  feedback_down: number;
+  up_rate: number | null;
+}
+
+export interface HandoverItem {
+  id: number;
+  session_id: string;
+  summary: string;
+  contact: string | null;
+  status: string;
+  created_at: string;
+}
+
+export interface BadCaseItem {
+  id: number;
+  session_id: string;
+  message_id: string | null;
+  value: string;
+  query: string | null;
+  context: string | null;
+  answer: string | null;
+  created_at: string;
+}
+
+export function fetchQueueStatus(queueId: number): Promise<QueueStatus> {
+  return get<QueueStatus>(`/api/v1/ops/queue/status?queue_id=${queueId}`);
+}
+
+export function fetchStats(): Promise<OpsStats> {
+  return get<OpsStats>("/api/v1/ops/stats");
+}
+
+export function fetchHandovers(status = "waiting"): Promise<HandoverItem[]> {
+  return get<HandoverItem[]>(`/api/v1/ops/handovers?status=${status}`);
+}
+
+export function fetchBadCases(limit = 20): Promise<BadCaseItem[]> {
+  return get<BadCaseItem[]>(`/api/v1/ops/badcases?limit=${limit}`);
+}
+
+export async function completeHandover(queueId: number): Promise<{ ok: boolean; queue_id: number }> {
+  return post(`/api/v1/ops/handovers/${queueId}/complete`, {});
+}

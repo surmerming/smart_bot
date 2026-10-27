@@ -164,6 +164,33 @@ class Database:
             conn.close()
             return fid
 
+    # ================= 反馈统计（V1.5 运营看板）=================
+    def feedback_stats(self) -> dict:
+        with self._lock:
+            conn = self._connect()
+            rows = conn.execute("SELECT value, COUNT(*) AS cnt FROM feedback GROUP BY value").fetchall()
+            conn.close()
+        counts = {r["value"]: r["cnt"] for r in rows}
+        up = counts.get("up", 0)
+        down = counts.get("down", 0)
+        total = up + down
+        return {
+            "feedback_total": total,
+            "feedback_up": up,
+            "feedback_down": down,
+            "up_rate": round(up / total, 4) if total else None,
+        }
+
+    def list_badcases(self, limit: int = 20) -> list[dict]:
+        """点踩记录（Bad Case 归因的原料）。"""
+        with self._lock:
+            conn = self._connect()
+            rows = conn.execute(
+                "SELECT * FROM feedback WHERE value='down' ORDER BY id DESC LIMIT ?", (limit,)
+            ).fetchall()
+            conn.close()
+        return [dict(r) for r in rows]
+
     # ================= 人工排队（留言转人工，MVP 无 WebSocket）=================
     def enqueue_handover(self, session_id: str, summary: str, contact: str | None = None) -> int:
         now = time.strftime("%Y-%m-%d %H:%M:%S")
@@ -186,6 +213,45 @@ class Database:
             ).fetchall()
             conn.close()
         return [dict(r) for r in rows]
+
+    # ================= 人工排队（V1.5：排队进度）=================
+    def get_handover(self, queue_id: int) -> Optional[dict]:
+        with self._lock:
+            conn = self._connect()
+            row = conn.execute("SELECT * FROM handover_queue WHERE id=?", (queue_id,)).fetchone()
+            conn.close()
+        return dict(row) if row else None
+
+    def complete_handover(self, queue_id: int) -> bool:
+        """坐席标记处理完成（仅 waiting → done）。"""
+        with self._lock:
+            conn = self._connect()
+            cur = conn.execute(
+                "UPDATE handover_queue SET status='done' WHERE id=? AND status='waiting'", (queue_id,)
+            )
+            conn.commit()
+            ok = cur.rowcount > 0
+            conn.close()
+        return ok
+
+    def queue_status(self, queue_id: int) -> Optional[dict]:
+        """排队进度：位置 / 前面还有几人 / 状态。"""
+        row = self.get_handover(queue_id)
+        if not row:
+            return None
+        waiting = self.list_handovers("waiting")
+        position = None
+        for i, r in enumerate(waiting, start=1):
+            if r["id"] == queue_id:
+                position = i
+                break
+        return {
+            "queue_id": queue_id,
+            "position": position,
+            "ahead": (position - 1) if position is not None else None,
+            "status": row["status"],
+            "created_at": row["created_at"],
+        }
 
     # ================= 运营统计（6.1 科学统计口径）=================
     def session_stats(self) -> dict:

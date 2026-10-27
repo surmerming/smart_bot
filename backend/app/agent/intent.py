@@ -12,11 +12,34 @@ import logging
 from dataclasses import dataclass
 
 from app.agent.llm import llm
-from app.agent.prompts import CAN_ANSWER_PROMPT, INTENT_PROMPT, NLI_PROMPT
+from app.agent.prompts import CAN_ANSWER_PROMPT, INTENT_PROMPT, NLI_PROMPT, QUERY_REWRITE_PROMPT
 from app.config import settings
 from app.storage.kb import FAQItem, has_negation, has_risk_keyword, wants_human
 
 logger = logging.getLogger(__name__)
+
+
+async def rewrite_query(query: str) -> str:
+    """Query Rewrite（V1.5）：口语化问题 → 适合检索的标准问法。
+
+    - 只影响检索召回，不影响后续否定/风险/转人工等安全判断（那些仍用原始 query）。
+    - 真实 LLM 做语义改写；Mock / 调用失败时回退原 query，保证离线链路行为稳定。
+    """
+    if not settings.QUERY_REWRITE_ENABLED:
+        return query
+    try:
+        out = await llm.complete(
+            [{"role": "user", "content": QUERY_REWRITE_PROMPT.format(query=query)}],
+            temperature=0.0,
+            max_tokens=60,
+        )
+        out = out.strip().strip('"').strip("'").strip()
+        if out and len(out) <= 80:
+            return out
+        logger.warning("查询重写结果异常（空/超长），回退原 query")
+    except Exception as exc:
+        logger.warning("查询重写调用失败，回退原 query：%s", exc)
+    return query
 
 
 @dataclass

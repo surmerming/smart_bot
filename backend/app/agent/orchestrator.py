@@ -7,13 +7,14 @@
 """
 from __future__ import annotations
 
+import asyncio
 import logging
 from typing import AsyncGenerator, Optional
 
 from app.agent import prompts
 from app.agent.emotion import classify_emotion
 from app.agent.humor import extract_key_facts
-from app.agent.intent import can_answer, classify_intent, decide, nli_check
+from app.agent.intent import can_answer, classify_intent, decide, nli_check, rewrite_query
 from app.agent.llm import llm
 from app.agent.prompts import (
     HANDOVER_HARD_MSG,
@@ -86,6 +87,9 @@ class Orchestrator:
     ) -> AsyncGenerator[dict, None]:
         meta = session_meta or {}
         handover_summary = build_handover_summary(query, history, [])
+        # V1.5 分层记忆：L2 摘要 + L3 结构化事实（由 chat 层每轮维护，这里只读取注入）
+        mem_summary = str(meta.get("summary", "") or "")
+        mem_facts = meta.get("facts") or {}
 
         # ---- 1. 用户主动要求转人工：立即转，不挽留 ----
         if wants_human(query):
@@ -99,7 +103,7 @@ class Orchestrator:
             if is_confirmation(query):
                 faq = self.kb.get_faq(pending_faq_id)
                 if faq:
-                    async for ev in self._answer_flow(faq, history, query, emotion="LEVEL_0", confirmed=True, message_id=message_id):
+                    async for ev in self._answer_flow(faq, history, query, emotion="LEVEL_0", confirmed=True, message_id=message_id, summary=mem_summary, facts=mem_facts):
                         yield ev
                     return
             elif is_denial(query):
@@ -113,23 +117,36 @@ class Orchestrator:
                 return
             # 其他输入：打断确认状态，进入新意图流程
 
-        # ---- 3. 情绪分级（5.6）----
-        emotion = await classify_emotion(query)
+        # ---- 3+5. 情绪分级 与 查询重写 并行（互不依赖，降低首字延迟）----
+        rewrite_needed = settings.QUERY_REWRITE_ENABLED and not wants_human(query)
+        emotion_task = asyncio.create_task(classify_emotion(query))
+        rewrite_task = asyncio.create_task(rewrite_query(query)) if rewrite_needed else None
 
-        # ---- 4. 红灯熔断：情绪极差 / 命中风险词 ----
+        # ---- 4. 红灯熔断：情绪极差 / 命中风险词（重写任务取消，避免浪费）----
+        emotion = await emotion_task
         if emotion == "LEVEL_3" or has_risk_keyword(query):
+            if rewrite_task:
+                rewrite_task.cancel()
+                try:
+                    await rewrite_task
+                except asyncio.CancelledError:
+                    pass
             async for ev in self._hard_handover(query, history, reason="emotion_red", emotion=emotion, message_id=message_id):
                 yield ev
             return
 
-        # ---- 5. 混合检索 ----
-        results = self.kb.search(query, top_k=settings.RETRIEVE_TOP_K)
+        # ---- 5. 查询重写结果（口语化 → 标准问法，仅用于检索召回）----
+        # 安全判断（否定/风险/转人工）仍基于原始 query，重写只提升召回精度。
+        search_query = await rewrite_task if rewrite_task else query
+
+        # ---- 5'. 混合检索 ----
+        results = self.kb.search(search_query, top_k=settings.RETRIEVE_TOP_K)
         verdict = decide(query, results)
         top_faq: Optional[FAQItem] = results[0]["faq"] if results else None
 
         # ---- 6. 决策 ----
         if verdict.decision == "handover":
-            async for ev in self._soft_handover(query, history, results, emotion=emotion, message_id=message_id):
+            async for ev in self._soft_handover(query, history, results, emotion=emotion, message_id=message_id, rewritten_query=search_query):
                 yield ev
             return
 
@@ -142,14 +159,14 @@ class Orchestrator:
                         yield ev
                     return
                 if nli == "NEUTRAL":
-                    async for ev in self._soft_handover(query, history, results, emotion=emotion, message_id=message_id):
+                    async for ev in self._soft_handover(query, history, results, emotion=emotion, message_id=message_id, rewritten_query=search_query):
                         yield ev
                     return
                 # ENTAILMENT → 继续生成
             else:
                 # 中置信：LLM 布尔判断（5.9 第二层）
                 if not await can_answer(query, results):
-                    async for ev in self._soft_handover(query, history, results, emotion=emotion, reason="cannot_answer", message_id=message_id):
+                    async for ev in self._soft_handover(query, history, results, emotion=emotion, reason="cannot_answer", message_id=message_id, rewritten_query=search_query):
                         yield ev
                     return
 
@@ -161,11 +178,11 @@ class Orchestrator:
 
         # ---- 8. 生成回答（流式）+ 输出校验 ----
         if top_faq is None:
-            async for ev in self._soft_handover(query, history, results, emotion=emotion, message_id=message_id):
+            async for ev in self._soft_handover(query, history, results, emotion=emotion, message_id=message_id, rewritten_query=search_query):
                 yield ev
             return
 
-        async for ev in self._answer_flow(top_faq, history, query, emotion=emotion, results=results, message_id=message_id):
+        async for ev in self._answer_flow(top_faq, history, query, emotion=emotion, results=results, message_id=message_id, rewritten_query=search_query, summary=mem_summary, facts=mem_facts):
             yield ev
 
     # ================= 生成流程 =================
@@ -178,6 +195,9 @@ class Orchestrator:
         results: Optional[list[dict]] = None,
         confirmed: bool = False,
         message_id: str = "",
+        rewritten_query: Optional[str] = None,
+        summary: str = "",
+        facts: Optional[dict] = None,
     ) -> AsyncGenerator[dict, None]:
         results = results or [{"faq": faq, "dense_score": 1.0, "bm25_score": 0.0, "combined": 1.0}]
         confidence = results[0]["dense_score"]
@@ -192,7 +212,16 @@ class Orchestrator:
         user_prompt = (
             f"（用户刚确认了上面的问题，请直接给出完整答案）{query}" if confirmed else query
         )
-        system = system.format(context=ctx, history=hist, query=user_prompt)
+        facts_str = "；".join(
+            f"{k}：{v}" for k, v in (facts or {}).items() if v and str(v) != "无"
+        ) or "（无）"
+        system = system.format(
+            context=ctx,
+            history=hist,
+            query=user_prompt,
+            summary=summary or "（无）",
+            facts=facts_str,
+        )
         messages = [{"role": "system", "content": system}]
         # 注意：历史只注入 system 的 history 字段（供理解上下文），
         # 不再追加独立 assistant 历史消息——避免 LLM 紧邻生成位复读上一条回复
@@ -213,6 +242,7 @@ class Orchestrator:
                 "handover": False,
                 "quick_replies": [],
                 "humor": humor_on,
+                "rewritten_query": rewritten_query or "",
             },
         }
 
@@ -256,6 +286,7 @@ class Orchestrator:
         emotion: str = "LEVEL_0",
         reason: str = "low_confidence",
         message_id: str = "",
+        rewritten_query: Optional[str] = None,
     ) -> AsyncGenerator[dict, None]:
         confidence = results[0]["dense_score"] if results else 0.0
         quick_replies: list[dict] = []
@@ -281,6 +312,7 @@ class Orchestrator:
                 "handover": False,
                 "quick_replies": quick_replies,
                 "handover_reason": reason,
+                "rewritten_query": rewritten_query or "",
             },
         }
         for chunk in _chunk_text(text):
@@ -304,6 +336,7 @@ class Orchestrator:
         emotion: str = "LEVEL_0",
         faq: Optional[FAQItem] = None,
         message_id: str = "",
+        rewritten_query: Optional[str] = None,
     ) -> AsyncGenerator[dict, None]:
         if reason == "emotion_red":
             text = RED_LIGHT_MSG
@@ -326,6 +359,7 @@ class Orchestrator:
                 "handover": True,
                 "quick_replies": quick_replies,
                 "handover_reason": reason,
+                "rewritten_query": rewritten_query or "",
             },
         }
         for chunk in _chunk_text(text):

@@ -1,3 +1,4 @@
+import { fileURLToPath, URL } from "node:url";
 import { defineConfig } from "vite";
 
 export default defineConfig({
@@ -13,5 +14,12 @@ export default defineConfig({
   },
   build: {
     outDir: "dist",
+    rollupOptions: {
+      input: {
+        main: fileURLToPath(new URL("./index.html", import.meta.url)),
+        agent: fileURLToPath(new URL("./agent.html", import.meta.url)),
+        dashboard: fileURLToPath(new URL("./dashboard.html", import.meta.url)),
+      },
+    },
   },
 });

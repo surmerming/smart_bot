@@ -235,6 +235,8 @@ class KnowledgeBase:
         self.faqs: list[FAQItem] = []
         self._index: Optional[TfidfIndex] = None
         self._categories: Counter = Counter()
+        # V1.5 缓存联动：知识库重建时版本 +1，高频缓存据此整体失效
+        self.version: int = 0
 
     # ---- 构建 ----
     def load(self, json_path: str) -> None:
@@ -251,6 +253,7 @@ class KnowledgeBase:
             weight_lists.append([w for _, w in q + a])
         self._index = TfidfIndex()
         self._index.build(token_lists, weight_lists)
+        self.version += 1
 
     def category_stats(self) -> dict:
         return dict(self._categories)

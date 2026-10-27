@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>小答 · 运营看板</title>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      body { font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif; background: #F5F6F8; color: #111214; }
+      .top { background: #111214; color: #fff; padding: 18px 32px; display: flex; align-items: center; gap: 12px; }
+      .logo { width: 34px; height: 34px; border-radius: 9px; background: #0066CC; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 16px; }
+      .top h1 { font-size: 17px; font-weight: 600; }
+      .top .sub { font-size: 12px; color: #9CA3AF; margin-top: 2px; }
+      .top .actions { margin-left: auto; display: flex; gap: 10px; }
+      .top button { background: #0066CC; border: none; color: #fff; padding: 8px 16px; border-radius: 8px; font-size: 13px; cursor: pointer; }
+      .top button.ghost { background: transparent; border: 1px solid #3F3F46; color: #D4D4D8; }
+      .wrap { max-width: 1080px; margin: 24px auto; padding: 0 24px; }
+      .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 14px; margin-bottom: 22px; }
+      .card { background: #fff; border: 1px solid #E7E8EA; border-radius: 12px; padding: 16px 18px; }
+      .card .num { font-size: 26px; font-weight: 700; color: #0066CC; }
+      .card .num.warn { color: #EF4444; }
+      .card .label { font-size: 12px; color: #6B7280; margin-top: 4px; }
+      .panel { background: #fff; border: 1px solid #E7E8EA; border-radius: 12px; padding: 20px 22px; margin-bottom: 18px; }
+      .panel h2 { font-size: 15px; font-weight: 600; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+      .bar-row { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+      .bar-row .name { width: 110px; font-size: 13px; color: #6B7280; flex-shrink: 0; }
+      .bar { flex: 1; height: 22px; background: #F0F1F3; border-radius: 6px; overflow: hidden; position: relative; }
+      .bar > i { display: block; height: 100%; border-radius: 6px; background: #0066CC; transition: width .4s ease; }
+      .bar > i.orange { background: #F59E0B; }
+      .bar > i.red { background: #EF4444; }
+      .bar-row .val { width: 70px; text-align: right; font-size: 13px; font-weight: 600; flex-shrink: 0; }
+      .tip { font-size: 12px; color: #9CA3AF; margin-top: 10px; line-height: 1.6; }
+      table { width: 100%; border-collapse: collapse; font-size: 13px; }
+      th { text-align: left; color: #6B7280; font-weight: 500; font-size: 12px; padding: 8px 10px; border-bottom: 1px solid #E7E8EA; }
+      td { padding: 10px; border-bottom: 1px solid #F3F4F6; vertical-align: top; line-height: 1.55; }
+      td .q { font-weight: 600; }
+      td .a { color: #6B7280; font-size: 12px; }
+      .empty { text-align: center; color: #9CA3AF; padding: 32px 0; font-size: 13px; }
+      .error { color: #EF4444; font-size: 13px; padding: 10px; }
+      .funnel { display: flex; align-items: flex-end; gap: 24px; padding: 8px 0 4px; }
+      .funnel .col { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+      .funnel .col .bar { width: 90px; height: 120px; background: #F0F1F3; border-radius: 8px; position: relative; overflow: hidden; }
+      .funnel .col .bar > i { position: absolute; bottom: 0; left: 0; right: 0; background: #0066CC; border-radius: 8px; }
+      .funnel .col .bar > i.orange { background: #F59E0B; }
+      .funnel .col .num { font-size: 16px; font-weight: 700; }
+      .funnel .col .label { font-size: 12px; color: #6B7280; }
+    </style>
+  </head>
+  <body>
+    <div class="top">
+      <div class="logo">答</div>
+      <div>
+        <h1>小答 · 运营看板</h1>
+        <div class="sub">自动化率 / 转人工率 / 点赞率（口径：转过人工即归人工）</div>
+      </div>
+      <div class="actions">
+        <button id="refresh" class="ghost">刷新</button>
+      </div>
+    </div>
+    <div class="wrap">
+      <div class="cards" id="cards"></div>
+      <div class="panel">
+        <h2>核心比率</h2>
+        <div id="bars"></div>
+        <div class="tip">统计口径（plan 6.1 铁律）：会话中只要发生过转人工，整个会话归入转人工类，不计入自动化率；自动化率 + 转人工率 = 100%。</div>
+      </div>
+      <div class="panel">
+        <h2>会话漏斗（State A / B+C）</h2>
+        <div class="funnel" id="funnel"></div>
+        <div class="tip">State A 纯 Agent 闭环 · State B+C 发生过转人工（Agent 未闭环）。用于定位优化方向，不用于结果统计。</div>
+      </div>
+      <div class="panel">
+        <h2>最近 Bad Case（点踩）</h2>
+        <table>
+          <thead><tr><th style="width:44%">用户问题</th><th>当时 Bot 回答</th><th style="width:130px">时间</th></tr></thead>
+          <tbody id="badcases"></tbody>
+        </table>
+      </div>
+      <div class="error" id="error"></div>
+    </div>
+    <script type="module" src="/src/dashboard.ts"></script>
+  </body>
+</html>

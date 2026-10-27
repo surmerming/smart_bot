@@ -40,23 +40,31 @@ smart_bot/
 │   ├── app/
 │   │   ├── main.py           # 入口：IP 限流中间件 + 知识库加载 + 路由注册
 │   │   ├── config.py         # 配置（.env）
-│   │   ├── routers/          # chat(init/stream/handover)、session(bind)、feedback、ops(统计)
-│   │   ├── agent/            # orchestrator / retriever 决策 / emotion / intent / humor / llm / prompts
-│   │   ├── storage/          # db(SQLite) / kb(TF-IDF+BM25) / rate_limit(限流+Token)
+│   │   ├── routers/          # chat(init/stream/handover)、session(bind)、feedback、ops(统计/排队/坐席)
+│   │   ├── agent/            # orchestrator / retriever 决策 / emotion / intent / humor / llm / prompts / memory(分层记忆)
+│   │   ├── storage/          # db(SQLite) / kb(TF-IDF+BM25) / rate_limit(限流+Token) / cache(高频缓存)
 │   │   └── models/schemas.py # 前后端契约（Pydantic）
-│   ├── tests/                # golden_dataset.json / eval.py / test_api.py
+│   ├── tools/badcase_report.py  # Bad Case 归因 → 自动生成 FAQ 草案（V1.5）
+│   ├── tests/                # golden_dataset.json / eval.py / test_api.py / load_test.py / test_badcase_report.py
 │   ├── requirements.txt
 │   └── .env.example
-├── frontend/                 # Vite + TS：官网 + Web Component Widget
+├── frontend/                 # Vite + TS：官网 + Widget + 坐席工作台 + 运营看板
+│   ├── index.html            # 官网（7 个 section，design/ 还原）
+│   ├── agent.html            # 坐席工作台：转人工待办 + 黄金摘要 + 完成（V1.5）
+│   ├── dashboard.html        # 运营看板：自动化率/转人工率/点赞率/漏斗/Bad Case（V1.5）
 │   ├── src/
-│   │   ├── main.ts / site.ts # 官网（7 个 section，design/ 还原）
-│   │   ├── widget.ts         # <xd-chat-widget>（inline / floating）
+│   │   ├── main.ts / site.ts # 官网
+│   │   ├── widget.ts         # <xd-chat-widget>（inline / floating，含排队进度轮询）
+│   │   ├── agent.ts / dashboard.ts  # 坐席 / 看板入口（V1.5）
 │   │   ├── sse-client.ts     # POST + SSE 流式解析
 │   │   └── api.ts            # 后端 API 封装
 │   └── package.json
 ├── knowledge_base/
 │   ├── faq.json              # 知识库唯一数据源（40 条 FAQ + 变体问法）
-│   └── build_kb.py           # 一键入库：索引构建 + 健康检查 + 抽样自检
+│   ├── build_kb.py           # 一键入库：索引构建 + 健康检查 + 抽样自检
+│   └── suggestions/          # Bad Case 归因产出的 FAQ 草案（V1.5）
+├── scripts/check.sh          # 本地一键质量检查：测试+评估+压测+build（V1.5）
+├── .github/workflows/ci.yml  # CI 评测流水线：pytest+eval+load+build（V1.5）
 ├── design/                   # 官网设计稿（s_nav/hero/problem/features/faq/cta/footer）
 ├── docker-compose.yml        # 生产期 Qdrant + Redis（MVP 无容器依赖）
 └── README.md
@@ -116,35 +124,42 @@ npm run build      # 产物在 dist/，可交给任意静态托管或由后端�
 | 接口 | 方法 | 作用 |
 |---|---|---|
 | `/api/v1/chat/init` | POST | 初始化：下发 Visitor Token + 拉取历史（视觉失忆恢复） |
-| `/api/v1/chat/stream` | POST(SSE) | 核心对话：流式返回回答 + 状态（meta → text → done） |
+| `/api/v1/chat/stream` | POST(SSE) | 核心对话：流式返回回答 + 状态（meta → text → done → summary） |
 | `/api/v1/session/bind` | POST | 登录瞬间绑定 anonymous_session_id ↔ user_id |
 | `/api/v1/feedback` | POST | 👍/👎 埋点，点踩自动入库（Bad Case 归因） |
 | `/api/v1/handover` | POST | 手动转人工 + 预留言 |
-| `/api/v1/ops/stats` | GET | 自动化率 / 转人工率（口径：转过人工即归人工） |
+| `/api/v1/ops/stats` | GET | 自动化率 / 转人工率 / 点赞率（口径：转过人工即归人工） |
 | `/api/v1/ops/handovers` | GET | 人工坐席待办列表（留言模式） |
+| `/api/v1/ops/queue/status` | GET | V1.5 排队进度（position / ahead），用户侧轮询 |
+| `/api/v1/ops/handovers/{id}/complete` | POST | V1.5 坐席标记待办完成 |
+| `/api/v1/ops/badcases` | GET | V1.5 点踩记录（Bad Case 归因原料） |
 
 **SSE 事件协议**（前后端契约，见 `frontend/src/sse-client.ts`）：
 
 ```
 event: meta   {"status":"answering|confirming|handover|limit|blocked","emotion":"LEVEL_0..3",
                "intent":"IN_KNOWLEDGE|...","confidence":0.323,"faq_ids":["faq_001"],
-               "faqs":[{"id":"faq_001","title":"售后","score":0.32}],"handover":false,"quick_replies":[...]}
+               "faqs":[{"id":"faq_001","title":"售后","score":0.32}],"handover":false,
+               "quick_replies":[...],"rewritten_query":"<重写后的检索 query，V1.5>"}
 event: text   {"content":"<流式增量>"}
-event: done   {"message_id":"msg_xxx","handover":true,"handover_reason":"...","handover_summary":"..."}
+event: done   {"message_id":"msg_xxx","handover":true,"handover_reason":"...","handover_summary":"...",
+               "cached":true}   # cached=true 表示高频缓存秒回（V1.5）
+event: summary {"message":"已转人工排队…","queue_id":155,"session_status":"HANDOVER"}  # 转人工后（V1.5）
 ```
 
 ## 五、设计要点（对应 plan.md）
 
 | 支柱 | 实现 |
 |---|---|
-| 检索与认知 | TF-IDF 简化向量（jieba 词 + 中文 bigram 混合特征，预留豆包 embedding + Qdrant 替换）+ BM25 双路召回 + RRF 融合；两级相似度阈值（当前 TF-IDF 量纲 <0.22 转人工 / 0.22-0.40 LLM 可回答性判断 / >0.40 直接答；切换真实 Embedding 后按 0.75/0.85 重调） |
+| 检索与认知 | TF-IDF 简化向量（jieba 词 + 中文 bigram 混合特征，预留豆包 embedding + Qdrant 替换）+ BM25 双路召回 + RRF 融合；两级相似度阈值（当前 TF-IDF 量纲 <0.22 转人工 / 0.22-0.40 LLM 可回答性判断 / >0.40 直接答；切换真实 Embedding 后按 0.75/0.85 重调）；**V1.5 Query Rewrite：口语化 → 标准问法（与情绪分级并行，仅用于检索召回，安全判断仍用原 query）** |
 | 防幻觉 | ① Prompt 强约束（只答知识库、查不到转人工话术）② 生成前可回答性校验 + NLI 否定句校验 ③ 生成后关键事实校验（数字/时间/金额指纹比对，不通过回退兜底话术） |
 | 幽默控制 | 只对售前类 + 情绪绿灯开放幽默；严肃场景（交易/售后/账户/投诉）自动关闭；润色模块（`humor.py`）预留两段式生成 |
 | 情绪熔断 | LLM 分级 LEVEL_0-3 + 关键词兜底；红灯（投诉/威胁/风险词）强制转人工并加急标记 |
-| 转人工 | 软转人工（澄清挽留 + 快捷选项）；硬转人工（承接话术 + 上下文摘要打包 + SQLite 排队列表） |
-| 会话 | SQLite 持久化 + 滑动窗口（最近 5 轮）+ 状态机（AGENT_ACTIVE/CONFIRMING/HANDOVER，可打断）+ 匿名→登录绑定 |
+| 转人工 | 软转人工（澄清挽留 + 快捷选项）；硬转人工（承接话术 + 上下文摘要打包 + SQLite 排队列表）；**V1.5 排队进度轮询（前面还有 X 人）+ 坐席工作台（黄金摘要 + 完成标记）** |
+| 会话 | SQLite 持久化 + 滑动窗口（最近 5 轮）+ 状态机（AGENT_ACTIVE/CONFIRMING/HANDOVER，可打断）+ 匿名→登录绑定；**V1.5 分层记忆：L2 超窗增量摘要 + L3 结构化事实（订单号/型号/诉求）注入 Prompt** |
 | 安全防刷 | Visitor Token（HMAC 签名校验）+ IP 限流（10 次/分，内存实现可换 Redis）+ 30 轮硬上限 + 超长输入拦截 |
-| 流式 | DeepSeek V3（deepseek-chat 非推理）+ SSE 逐 token，首字 < 2s |
+| 流式 | DeepSeek V3（deepseek-chat 非推理）+ SSE 逐 token，首字 < 2s；**V1.5 高频缓存：Top20 首轮问题命中秒回（cached=true，不调 LLM）** |
+| 运营闭环 | **V1.5 运营看板（自动化率/转人工率/点赞率/漏斗 + Bad Case 列表）+ Bad Case 归因 CLI（缺失/检索弱/生成质量三类 → 自动生成 FAQ 草案）** |
 
 ## 六、测试与评估
 
@@ -153,20 +168,26 @@ event: done   {"message_id":"msg_xxx","handover":true,"handover_reason":"...","h
 cd backend && python tests/eval.py
 
 # 2) 接口测试（Mock LLM，离线）
-cd backend && python -m pytest tests/test_api.py -v
+cd backend && python -m pytest tests/test_api.py tests/test_badcase_report.py -v
+
+# 3) 并发压测（默认进程内 Mock，零成本；--base 连真实后端）
+cd backend && python tests/load_test.py --concurrency 20 --total 120
+
+# 4) 本地一键全量检查（测试 + 评估 + 压测冒烟 + 前端构建）
+./scripts/check.sh
 ```
 
-`tests/eval.py` 输出 Hit@3 / MRR / 高风险红线命中 / 否定句检查，并列出检索失败案例（建议补变体问法）。
+- `tests/eval.py` 输出 Hit@3 / MRR / 高风险红线命中 / 否定句检查，并列出检索失败案例（建议补变体问法）。
+- **CI 流水线**（`.github/workflows/ci.yml`）：push/PR 自动跑 pytest + eval + 压测冒烟 + 前端 build，防负向优化。
 
-**当前基准（2026-10-27 验证）**：黄金集 100 条命中评估 Hit@3 = 100%、MRR = 0.993（否定句 5/5、高风险红线 10/10、低置信转人工 10/10）；接口测试 `pytest tests/test_api.py` 10/10 通过。前端 `npm run build` 通过，官网 + Widget 已在浏览器实测对话（命中徽章、流式打字机、红灯转人工、floating 弹窗、历史恢复）。**DeepSeek 真实链路已验证**：命中 FAQ 生成真实回答（事实打底 + 幽默润色）、投诉场景 LLM 情绪分级 + 风险词兜底正确转人工。
+**当前基准（2026-10-27 V1.5 验证）**：黄金集 100 条命中评估 Hit@3 = 100%、MRR = 0.993（否定句 5/5、高风险红线 10/10、低置信转人工 10/10）；接口测试 16/16 通过（含 Query Rewrite、分层记忆 L2/L3、高频缓存、排队进度、坐席完成、点赞率、Bad Case 归因）；进程内并发压测 320 请求成功率 100%、P95 137ms、吞吐 85.8 req/s；前端 `npm run build` 通过（官网 / 坐席 / 看板三页）。**DeepSeek 真实链路已验证**：Query Rewrite 生效（"拆了包装还能退吗"→"拆了包装还能退货吗"）、命中生成 + 幽默润色、红灯投诉转人工并返回 queue_id、同问题跨会话秒回缓存命中、历史恢复正常。
 
-## 七、生产演进路线（plan V1.5 / V2.0）
+## 七、生产演进路线（V2.0 计划）
 
-- **检索**：TF-IDF → 豆包 text-embedding / BGE-M3 + Qdrant（`docker-compose.yml` 已预留）；Query Rewrite 查询重写
-- **记忆**：L2 摘要压缩 + L3 结构化事实（订单号/型号/诉求）
-- **转人工**：WebSocket 实时排队 + 坐席工作台（黄金摘要卡片 + 快捷回复模板）
-- **运营**：Bad Case 归因周报、Langfuse Trace、自动化巡检
-- **安全**：Cloudflare + Turnstile 无感人机验证、Redis 限流
+- **检索**：TF-IDF → 豆包 text-embedding / BGE-M3 + Qdrant（`docker-compose.yml` 已预留）
+- **转人工**：WebSocket 实时排队 → 坐席 AI Copilot（快捷回复模板 + 一键调用内部系统）
+- **运营**：Langfuse LLM Trace、自动化巡检 CronJob、FAQ 审批流
+- **安全**：Cloudflare + Turnstile 无感人机验证、Redis 限流（V1.5 已留可开关钩子：Visitor Token + 内存限流）
 
 ## 八、免责与合规
 

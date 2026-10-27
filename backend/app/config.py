@@ -53,6 +53,11 @@ class Settings:
     SIM_THRESHOLD_HIGH: float = _env_float("SIM_THRESHOLD_HIGH", 0.40)
     RETRIEVE_TOP_K: int = _env_int("RETRIEVE_TOP_K", 3)
     RRF_K: int = _env_int("RRF_K", 60)
+    # V1.5 检索精度：Query Rewrite 查询重写（口语化 → 标准问法，仅用于检索）
+    QUERY_REWRITE_ENABLED: bool = _env_str("QUERY_REWRITE_ENABLED", "true").lower() in ("1", "true", "yes", "on")
+    # V1.5 缓存优化：高频问题秒回缓存（仅首轮、仅自动回答结果）
+    CACHE_ENABLED: bool = _env_str("CACHE_ENABLED", "true").lower() in ("1", "true", "yes", "on")
+    CACHE_MAX_ENTRIES: int = _env_int("CACHE_MAX_ENTRIES", 20)
 
     # --- 会话与安全 ---
     SESSION_MAX_TURNS: int = _env_int("SESSION_MAX_TURNS", 30)
