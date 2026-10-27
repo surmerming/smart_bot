@@ -23,6 +23,7 @@ export default defineConfig({
         main: fileURLToPath(new URL("./index.html", import.meta.url)),
         agent: fileURLToPath(new URL("./agent.html", import.meta.url)),
         dashboard: fileURLToPath(new URL("./dashboard.html", import.meta.url)),
+        kb: fileURLToPath(new URL("./kb.html", import.meta.url)),
       },
     },
   },

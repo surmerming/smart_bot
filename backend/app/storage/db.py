@@ -72,6 +72,28 @@ class Database:
                 status TEXT DEFAULT 'waiting',
                 created_at TEXT
             );
+            -- V2.0 知识库后台：FAQ 变更草稿 / 审批流
+            -- status: draft(草稿) -> pending(待审) -> published(已生效) / rejected(已驳回)
+            CREATE TABLE IF NOT EXISTS faq_drafts (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                faq_id TEXT,
+                action TEXT,                 -- create / update / delete
+                payload TEXT,                -- 完整 FAQ JSON（delete 时可为删除前快照）
+                status TEXT DEFAULT 'draft',
+                created_by TEXT DEFAULT 'ops',
+                reviewed_by TEXT,
+                created_at TEXT,
+                updated_at TEXT
+            );
+            -- V2.0 知识库后台：版本历史（每次审批生效记一条，含完整快照）
+            CREATE TABLE IF NOT EXISTS faq_versions (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                faq_id TEXT,
+                action TEXT,                 -- create / update / delete
+                snapshot TEXT,               -- 发布后快照 JSON（delete 为删除前快照）
+                operator TEXT DEFAULT 'ops',
+                created_at TEXT
+            );
             """
         )
         # V2.0 迁移：坐席 Copilot 数据列（工单卡片 + 回复模板），旧库自动加列
@@ -306,6 +328,147 @@ class Database:
             "handover": handover,
             "auto_rate": round(agent / total, 4) if total else 0.0,
         }
+
+    # ================= 知识库后台（V2.0）：FAQ 草稿 / 审批流 =================
+    @staticmethod
+    def _now() -> str:
+        return time.strftime("%Y-%m-%d %H:%M:%S")
+
+    def create_faq_draft(self, faq_id: str, action: str, payload: dict | None,
+                         created_by: str = "ops") -> int:
+        """创建 FAQ 变更草稿（create / update / delete）。返回 draft_id。"""
+        now = self._now()
+        payload_json = json.dumps(payload, ensure_ascii=False) if payload is not None else None
+        with self._lock:
+            conn = self._connect()
+            cur = conn.execute(
+                "INSERT INTO faq_drafts (faq_id, action, payload, status, created_by, created_at, updated_at) "
+                "VALUES (?, ?, ?, 'draft', ?, ?, ?)",
+                (faq_id, action, payload_json, created_by, now, now),
+            )
+            conn.commit()
+            did = cur.lastrowid
+            conn.close()
+            return did
+
+    def list_faq_drafts(self, status: str | None = None) -> list[dict]:
+        """草稿列表；status 可为 draft / pending / rejected / published / None(全部)。"""
+        with self._lock:
+            conn = self._connect()
+            if status:
+                rows = conn.execute(
+                    "SELECT * FROM faq_drafts WHERE status=? ORDER BY id DESC", (status,)
+                ).fetchall()
+            else:
+                rows = conn.execute("SELECT * FROM faq_drafts ORDER BY id DESC").fetchall()
+            conn.close()
+        out = []
+        for r in rows:
+            d = dict(r)
+            try:
+                d["payload"] = json.loads(d.get("payload") or "null")
+            except json.JSONDecodeError:
+                d["payload"] = None
+            out.append(d)
+        return out
+
+    def get_faq_draft(self, draft_id: int) -> Optional[dict]:
+        with self._lock:
+            conn = self._connect()
+            row = conn.execute("SELECT * FROM faq_drafts WHERE id=?", (draft_id,)).fetchone()
+            conn.close()
+        if not row:
+            return None
+        d = dict(row)
+        try:
+            d["payload"] = json.loads(d.get("payload") or "null")
+        except json.JSONDecodeError:
+            d["payload"] = None
+        return d
+
+    def set_faq_draft_status(self, draft_id: int, status: str, reviewed_by: str | None = None) -> bool:
+        """状态流转：draft -> pending -> published / rejected（仅允许合法前进，防并发跳转）。"""
+        allowed = {
+            ("draft", "pending"): True,
+            ("pending", "published"): True,
+            ("pending", "rejected"): True,
+            ("rejected", "pending"): True,   # 驳回后可修改再提交
+        }
+        now = self._now()
+        with self._lock:
+            conn = self._connect()
+            row = conn.execute("SELECT status FROM faq_drafts WHERE id=?", (draft_id,)).fetchone()
+            if not row:
+                conn.close()
+                return False
+            if not allowed.get((row["status"], status), False):
+                conn.close()
+                return False
+            if status == "rejected" or status == "published":
+                cur = conn.execute(
+                    "UPDATE faq_drafts SET status=?, reviewed_by=?, updated_at=? WHERE id=?",
+                    (status, reviewed_by or "ops", now, draft_id),
+                )
+            else:
+                cur = conn.execute(
+                    "UPDATE faq_drafts SET status=?, updated_at=? WHERE id=?",
+                    (status, now, draft_id),
+                )
+            conn.commit()
+            ok = cur.rowcount > 0
+            conn.close()
+            return ok
+
+    def delete_faq_draft(self, draft_id: int) -> bool:
+        """撤销草稿（仅 draft / rejected 态可删）。"""
+        with self._lock:
+            conn = self._connect()
+            cur = conn.execute(
+                "DELETE FROM faq_drafts WHERE id=? AND status IN ('draft','rejected')", (draft_id,)
+            )
+            conn.commit()
+            ok = cur.rowcount > 0
+            conn.close()
+        return ok
+
+    # ================= 知识库后台（V2.0）：版本历史 =================
+    def add_faq_version(self, faq_id: str, action: str, snapshot: dict | None, operator: str = "ops") -> int:
+        now = self._now()
+        with self._lock:
+            conn = self._connect()
+            cur = conn.execute(
+                "INSERT INTO faq_versions (faq_id, action, snapshot, operator, created_at) "
+                "VALUES (?, ?, ?, ?, ?)",
+                (faq_id, action, json.dumps(snapshot, ensure_ascii=False) if snapshot else None,
+                 operator, now),
+            )
+            conn.commit()
+            vid = cur.lastrowid
+            conn.close()
+            return vid
+
+    def list_faq_versions(self, faq_id: str | None = None, limit: int = 50) -> list[dict]:
+        with self._lock:
+            conn = self._connect()
+            if faq_id:
+                rows = conn.execute(
+                    "SELECT * FROM faq_versions WHERE faq_id=? ORDER BY id DESC LIMIT ?",
+                    (faq_id, limit),
+                ).fetchall()
+            else:
+                rows = conn.execute(
+                    "SELECT * FROM faq_versions ORDER BY id DESC LIMIT ?", (limit,)
+                ).fetchall()
+            conn.close()
+        out = []
+        for r in rows:
+            d = dict(r)
+            try:
+                d["snapshot"] = json.loads(d.get("snapshot") or "null")
+            except json.JSONDecodeError:
+                d["snapshot"] = None
+            out.append(d)
+        return out
 
 
 db = Database()

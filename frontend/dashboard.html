@@ -14,6 +14,10 @@
       .top .actions { margin-left: auto; display: flex; gap: 10px; }
       .top button { background: #0066CC; border: none; color: #fff; padding: 8px 16px; border-radius: 8px; font-size: 13px; cursor: pointer; }
       .top button.ghost { background: transparent; border: 1px solid #3F3F46; color: #D4D4D8; }
+      .nav { margin-left: 32px; display: flex; gap: 6px; }
+      .nav a { color: #D4D4D8; text-decoration: none; font-size: 13px; padding: 6px 14px; border-radius: 8px; }
+      .nav a:hover { background: #27272A; }
+      .nav a.active { background: #0066CC; color: #fff; }
       .wrap { max-width: 1080px; margin: 24px auto; padding: 0 24px; }
       .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 14px; margin-bottom: 22px; }
       .card { background: #fff; border: 1px solid #E7E8EA; border-radius: 12px; padding: 16px 18px; }
@@ -52,6 +56,11 @@
       <div>
         <h1>小答 · 运营看板</h1>
         <div class="sub">自动化率 / 转人工率 / 点赞率（口径：转过人工即归人工）</div>
+      </div>
+      <div class="nav">
+        <a href="/dashboard.html" class="active">运营看板</a>
+        <a href="/agent.html">坐席工作台</a>
+        <a href="/kb.html">知识库后台</a>
       </div>
       <div class="actions">
         <button id="refresh" class="ghost">刷新</button>

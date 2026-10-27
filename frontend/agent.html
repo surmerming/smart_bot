@@ -14,6 +14,10 @@
       .top .actions { margin-left: auto; display: flex; gap: 10px; }
       .top button { background: #0066CC; border: none; color: #fff; padding: 8px 16px; border-radius: 8px; font-size: 13px; cursor: pointer; }
       .top button.ghost { background: transparent; border: 1px solid #3F3F46; color: #D4D4D8; }
+      .nav { margin-left: 32px; display: flex; gap: 6px; }
+      .nav a { color: #D4D4D8; text-decoration: none; font-size: 13px; padding: 6px 14px; border-radius: 8px; }
+      .nav a:hover { background: #27272A; }
+      .nav a.active { background: #0066CC; color: #fff; }
       .wrap { max-width: 1080px; margin: 24px auto; padding: 0 24px; }
       .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 22px; }
       .stat { background: #fff; border: 1px solid #E7E8EA; border-radius: 12px; padding: 16px 18px; }
@@ -61,6 +65,11 @@
       <div>
         <h1>小答 · 坐席工作台</h1>
         <div class="sub">转人工待办 / AI Copilot（工单卡片 + 快捷回复 + 内部系统查询）</div>
+      </div>
+      <div class="nav">
+        <a href="/dashboard.html">运营看板</a>
+        <a href="/agent.html" class="active">坐席工作台</a>
+        <a href="/kb.html">知识库后台</a>
       </div>
       <div class="ws-state" id="ws-state">连接中…</div>
       <div class="actions">

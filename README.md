@@ -40,31 +40,32 @@ smart_bot/
 │   ├── app/
 │   │   ├── main.py           # 入口：IP 限流中间件 + 知识库加载 + 路由注册
 │   │   ├── config.py         # 配置（.env）
-│   │   ├── routers/          # chat(init/stream/handover)、session(bind)、feedback、ops(统计/排队/坐席)、ws(实时通道)
+│   │   ├── routers/          # chat(init/stream/handover)、session(bind)、feedback、ops(统计/排队/坐席)、kb_admin(知识库后台)、ws(实时通道)
 │   │   ├── agent/            # orchestrator / retriever 决策 / emotion / intent / humor / llm / prompts / memory(分层记忆) / copilot(坐席AI)
 │   │   ├── storage/          # db(SQLite) / kb(TF-IDF+BM25) / rate_limit(限流+Token) / cache(高频缓存)
 │   │   └── models/schemas.py # 前后端契约（Pydantic）
 │   ├── tools/badcase_report.py  # Bad Case 归因 → 自动生成 FAQ 草案（V1.5）
-│   ├── tests/                # golden_dataset.json / eval.py / test_api.py / load_test.py / test_badcase_report.py / test_v2_ws_copilot.py
+│   ├── tests/                # golden_dataset.json / eval.py / test_api.py / load_test.py / test_badcase_report.py / test_v2_ws_copilot.py / test_kb_admin.py
 │   ├── requirements.txt
 │   └── .env.example
-├── frontend/                 # Vite + TS：官网 + Widget + 坐席工作台 + 运营看板
+├── frontend/                 # Vite + TS：官网 + Widget + 坐席工作台 + 运营看板 + 知识库后台
 │   ├── index.html            # 官网（7 个 section，design/ 还原）
 │   ├── agent.html            # 坐席工作台：AI Copilot（工单卡片 / 快捷回复 / 内部系统查询）+ 实时待办（V1.5/V2.0）
 │   ├── dashboard.html        # 运营看板：自动化率/转人工率/点赞率/漏斗/Bad Case（V1.5）
+│   ├── kb.html               # 知识库后台：FAQ CRUD + 草稿审批流 + 版本历史（V2.0）
 │   ├── src/
 │   │   ├── main.ts / site.ts # 官网
 │   │   ├── widget.ts         # <xd-chat-widget>（inline / floating，含排队进度轮询）
-│   │   ├── agent.ts / dashboard.ts  # 坐席 / 看板入口（V1.5）
+│   │   ├── agent.ts / dashboard.ts / kb.ts  # 坐席 / 看板 / 知识库后台入口（V1.5/V2.0）
 │   │   ├── sse-client.ts     # POST + SSE 流式解析
 │   │   └── api.ts            # 后端 API 封装
 │   └── package.json
 ├── knowledge_base/
-│   ├── faq.json              # 知识库唯一数据源（40 条 FAQ + 变体问法）
+│   ├── faq.json              # 知识库唯一数据源（40 条 FAQ + 变体问法，经知识库后台审批流维护）
 │   ├── build_kb.py           # 一键入库：索引构建 + 健康检查 + 抽样自检
 │   └── suggestions/          # Bad Case 归因产出的 FAQ 草案（V1.5）
-├── scripts/check.sh          # 本地一键质量检查：测试+评估+压测+build（V1.5）
-├── .github/workflows/ci.yml  # CI 评测流水线：pytest+eval+load+build（V1.5）
+├── scripts/check.sh          # 本地一键质量检查：测试+评估+压测+build（V1.5/V2.0 含知识库后台测试）
+├── .github/workflows/ci.yml  # CI 评测流水线：pytest+eval+load+build（V1.5/V2.0 含知识库后台测试）
 ├── design/                   # 官网设计稿（s_nav/hero/problem/features/faq/cta/footer）
 ├── docker-compose.yml        # 生产期 Qdrant + Redis（MVP 无容器依赖）
 └── README.md
@@ -117,7 +118,15 @@ npm run build      # 产物在 dist/，可交给任意静态托管或由后端�
 
 ### 3. 知识库维护（运营唯一入口）
 
-编辑 `knowledge_base/faq.json`（Source of Truth，禁止在向量库直接改）→ 运行 `python knowledge_base/build_kb.py` 一键全量重建（40 条毫秒级完成），脚本会输出分类分布、重复率检查和抽样命中自检。
+打开 `http://localhost:5173/kb.html`（知识库后台，顶栏导航进入），运营人员可直接在网页上：
+- **新建 / 编辑 / 删除 FAQ**：操作生成「草稿」，不影响线上
+- **提交审核**：草稿进入待审状态
+- **主管审批**（右上角切换「主管（审批）」角色）：通过即**热更新生效**（原子写 `faq.json` → 内存索引重建 → 高频缓存自动失效 → 记版本历史），全程无需重启、无需改代码
+- **版本历史**：每次审批生效留完整快照，可追溯谁在何时改了什么
+
+底层原则不变：`knowledge_base/faq.json` 仍是 Source of Truth（禁止绕过后台手工改文件）；
+`python knowledge_base/build_kb.py` 保留作离线全量构建 / 自检工具（后台热更新已覆盖在线场景）。
+> 说明：审批生效会以标准 JSON（indent=2）重写 faq.json，内容不变、仅格式展开，属正常产物。
 
 ## 四、核心 API
 
@@ -136,6 +145,15 @@ npm run build      # 产物在 dist/，可交给任意静态托管或由后端�
 | `/api/v1/ops/copilot/{queue_id}` | GET | V2.0 坐席工单卡片（核心诉求/订单号/Bot已答/未解决） |
 | `/api/v1/ops/copilot/templates` | POST | V2.0 一键生成 3 个快捷回复模板 |
 | `/api/v1/ops/copilot/query` | POST | V2.0 一键查询内部系统（开发期 Mock，标注演示） |
+| `/api/v1/kb/faqs` | GET/POST | V2.0 知识库后台：FAQ 列表（分类/关键词过滤，附草稿标记）/ 新建（进草稿） |
+| `/api/v1/kb/faqs/{id}` | GET/PUT/DELETE | V2.0 知识库后台：单条详情 / 编辑（进草稿）/ 删除（进草稿） |
+| `/api/v1/kb/drafts` | GET | V2.0 草稿列表（状态过滤：draft/pending/rejected/published） |
+| `/api/v1/kb/drafts/{id}/submit` | POST | V2.0 草稿提交审核（draft → pending） |
+| `/api/v1/kb/drafts/{id}/approve` | POST | V2.0 主管审批通过（pending → 生效：落盘 faq.json + 热更新 + 记版本） |
+| `/api/v1/kb/drafts/{id}/reject` | POST | V2.0 主管驳回（pending → rejected，可改后重提） |
+| `/api/v1/kb/drafts/{id}` | DELETE | V2.0 撤销草稿（仅 draft/rejected 态） |
+| `/api/v1/kb/versions` | GET | V2.0 版本历史（每次生效留完整快照） |
+| `/api/v1/kb/rebuild` | POST | V2.0 手动热更新兜底（正常路径审批通过即自动热更新） |
 | `/ws/user?session_id=&visitor_token=` | WS | V2.0 用户端：排队进度 / 人工接入实时推送 |
 | `/ws/agent` | WS | V2.0 坐席端：新待办 / 完成事件实时广播（首帧下发快照） |
 
@@ -176,7 +194,7 @@ event: summary {"message":"已转人工排队…","queue_id":155,"session_status
 | 会话 | SQLite 持久化 + 滑动窗口（最近 5 轮）+ 状态机（AGENT_ACTIVE/CONFIRMING/HANDOVER，可打断）+ 匿名→登录绑定；**V1.5 分层记忆：L2 超窗增量摘要 + L3 结构化事实（订单号/型号/诉求）注入 Prompt** |
 | 安全防刷 | Visitor Token（HMAC 签名校验）+ IP 限流（10 次/分，内存实现可换 Redis）+ 30 轮硬上限 + 超长输入拦截 |
 | 流式 | DeepSeek V3（deepseek-chat 非推理）+ SSE 逐 token，首字 < 2s；**V1.5 高频缓存：Top20 首轮问题命中秒回（cached=true，不调 LLM）** |
-| 运营闭环 | V1.5 运营看板（自动化率/转人工率/点赞率/漏斗 + Bad Case 列表）+ Bad Case 归因 CLI（缺失/检索弱/生成质量三类 → 自动生成 FAQ 草案）；**V2.0 坐席 AI Copilot：转人工自动生成结构化工单卡片（核心诉求/订单号/Bot已答/未解决）+ 一键快捷回复模板 + 一键查询内部系统（Mock）** |
+| 运营闭环 | V1.5 运营看板（自动化率/转人工率/点赞率/漏斗 + Bad Case 列表）+ Bad Case 归因 CLI（缺失/检索弱/生成质量三类 → 自动生成 FAQ 草案）；**V2.0 坐席 AI Copilot：转人工自动生成结构化工单卡片（核心诉求/订单号/Bot已答/未解决）+ 一键快捷回复模板 + 一键查询内部系统（Mock）**；**V2.0 知识库后台：FAQ CRUD 全走「草稿→提交审核→主管审批→生效」审批流，生效即原子写 faq.json + 索引热更新（kb.version+1 自动失效高频缓存）+ 版本历史快照，运营免写代码自主维护** |
 
 ## 六、测试与评估
 
@@ -185,7 +203,7 @@ event: summary {"message":"已转人工排队…","queue_id":155,"session_status
 cd backend && python tests/eval.py
 
 # 2) 接口测试（Mock LLM，离线）
-cd backend && python -m pytest tests/test_api.py tests/test_badcase_report.py tests/test_v2_ws_copilot.py -v
+cd backend && python -m pytest tests/test_api.py tests/test_badcase_report.py tests/test_v2_ws_copilot.py tests/test_kb_admin.py -v
 
 # 3) 并发压测（默认进程内 Mock，零成本；--base 连真实后端）
 cd backend && python tests/load_test.py --concurrency 20 --total 120
@@ -197,7 +215,7 @@ cd backend && python tests/load_test.py --concurrency 20 --total 120
 - `tests/eval.py` 输出 Hit@3 / MRR / 高风险红线命中 / 否定句检查，并列出检索失败案例（建议补变体问法）。
 - **CI 流水线**（`.github/workflows/ci.yml`）：push/PR 自动跑 pytest + eval + 压测冒烟 + 前端 build，防负向优化。
 
-**当前基准（2026-10-27 V2.0 验证）**：黄金集 100 条命中评估 Hit@3 = 100%、MRR = 0.993（否定句 5/5、高风险红线 10/10、低置信转人工 10/10）；接口测试 20/20 通过（含 Query Rewrite、分层记忆 L2/L3、高频缓存、排队进度、坐席完成、点赞率、Bad Case 归因、WS 快照/实时广播/Token 鉴权、Copilot 卡片/模板/查询）；进程内并发压测 320 请求成功率 100%、P95 137ms、吞吐 85.8 req/s；前端 `npm run build` 通过（官网 / 坐席 / 看板三页）。**DeepSeek 真实链路已验证**：V1.5 全项 + V2.0 WS 实时排队（转人工 → 坐席秒收新待办、用户 WS 收到位置推送、坐席完成 → 双方实时通知）+ Copilot 真实 LLM 生成（工单卡片正确提取订单号 JD202610270088、3 条可用回复模板、内部系统 Mock 查询）。
+**当前基准（2026-10-27 V2.0 验证）**：黄金集 100 条命中评估 Hit@3 = 100%、MRR = 0.993（否定句 5/5、高风险红线 10/10、低置信转人工 10/10）；接口测试 28/28 通过（含 Query Rewrite、分层记忆 L2/L3、高频缓存、排队进度、坐席完成、点赞率、Bad Case 归因、WS 快照/实时广播/Token 鉴权、Copilot 卡片/模板/查询、**知识库后台 8/8：新建/编辑/删除全流程审批生效 + 热更新检索命中 + 驳回不生效 + 状态机防护 + 输入校验**）；进程内并发压测 320 请求成功率 100%、P95 137ms、吞吐 85.8 req/s；前端 `npm run build` 通过（官网 / 坐席 / 看板 / 知识库后台四页）。**DeepSeek 真实链路已验证**：V1.5 全项 + V2.0 WS 实时排队（转人工 → 坐席秒收新待办、用户 WS 收到位置推送、坐席完成 → 双方实时通知）+ Copilot 真实 LLM 生成（工单卡片正确提取订单号 JD202610270088、3 条可用回复模板、内部系统 Mock 查询）+ **知识库后台真实热更新端到端（新建 faq_041 → 提交 → 审批 → faq.json 落盘 41 条 + 检索命中 + 版本留档 → 删除审批 → 恢复 40 条，冒烟后现场完全还原）**。
 
 ## 七、生产演进路线（V3.0 计划）
 

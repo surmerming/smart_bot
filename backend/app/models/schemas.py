@@ -41,6 +41,35 @@ class HandoverRequest(BaseModel):
     contact: Optional[str] = Field(None, max_length=64, description="手机号/邮箱，可选")
 
 
+# ---------- V2.0 知识库后台：FAQ 载荷 / 草稿动作 ----------
+class FAQPayload(BaseModel):
+    """FAQ 完整内容（新建/编辑共用；id 由后端生成或路由路径指定）。"""
+    category: Literal["aftersales", "presales", "transaction", "account"]
+    standard_question: str = Field(..., min_length=2, max_length=200)
+    variants: list[str] = Field(default_factory=list, max_length=50)
+    answer: str = Field(..., min_length=1, max_length=5000)
+    risk_level: Literal["low", "mid", "high"] = "low"
+    follow_up: list[str] = Field(default_factory=list, max_length=20)
+
+
+class FAQCreateRequest(BaseModel):
+    """新建 FAQ（进入草稿，待审批）。"""
+    faq: FAQPayload
+    created_by: str = Field("ops", max_length=64)
+
+
+class FAQUpdateRequest(BaseModel):
+    """编辑已有 FAQ（进入草稿，待审批）。"""
+    faq: FAQPayload
+    created_by: str = Field("ops", max_length=64)
+
+
+class DraftReviewRequest(BaseModel):
+    """审批动作附带信息（通过/驳回）。"""
+    reviewed_by: str = Field("ops", max_length=64)
+    reason: Optional[str] = Field(None, max_length=500, description="驳回原因，可选")
+
+
 # ---------- 响应 ----------
 class ChatInitResponse(BaseModel):
     session_id: str
