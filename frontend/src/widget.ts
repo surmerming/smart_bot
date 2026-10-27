@@ -362,7 +362,10 @@ export class ChatWidget extends HTMLElement {
         },
       );
     } catch (err) {
-      botMsg.content = "网络开小差了，请稍后再试～";
+      const errText = String(err);
+      botMsg.content = errText.includes("429") || errText.includes("请求太频繁")
+        ? "请求太频繁啦，请稍等片刻再试～"
+        : "网络开小差了，请稍后再试～";
       this.updateBubble(row, botMsg.content, false);
       console.error("[xd-chat] stream failed:", err);
     }
