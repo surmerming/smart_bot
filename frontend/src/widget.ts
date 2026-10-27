@@ -8,7 +8,7 @@
  *   - api-base  后端地址（缺省同源，走 /api 代理）
  *   - brand     品牌名（缺省取后端 init 返回）
  */
-import { chatInit, fetchQueueStatus, manualHandover, sendFeedback } from "./api";
+import { chatInit, fetchQueueStatus, manualHandover, sendFeedback, submitCsat } from "./api";
 import { postSSE } from "./sse-client";
 
 const STORE_KEY = "xd_anonymous_session_id";
@@ -82,6 +82,16 @@ const WIDGET_CSS = `
   margin: 6px 0 0; padding: 8px 10px; background: #FFF7ED; border: 1px solid #FED7AA; color: #9A3412;
   border-radius: 10px; font-size: 12px; line-height: 1.5;
 }
+.xd-csat { margin-top: 8px; padding: 10px 12px; background: #F8FAFC; border: 1px solid #E7E8EA; border-radius: 10px; font-size: 12px; color: #374151; }
+.xd-csat .xd-csat-q { margin-bottom: 6px; color: #6B7280; }
+.xd-csat .xd-csat-stars { display: flex; gap: 2px; font-size: 20px; cursor: pointer; }
+.xd-csat .xd-csat-stars span { color: #D1D5DB; transition: transform .1s ease; }
+.xd-csat .xd-csat-stars span.on { color: #F59E0B; }
+.xd-csat .xd-csat-stars span:hover { transform: scale(1.15); }
+.xd-csat textarea { width: 100%; margin-top: 8px; border: 1px solid #D4D4D8; border-radius: 8px; padding: 6px 8px; font-size: 12px; resize: vertical; box-sizing: border-box; font-family: inherit; }
+.xd-csat button.xd-csat-submit { margin-top: 8px; background: #0066CC; color: #fff; border: none; border-radius: 8px; padding: 6px 16px; font-size: 12px; cursor: pointer; }
+.xd-csat button.xd-csat-submit:disabled { background: #9CA3AF; cursor: default; }
+.xd-csat-done { margin-top: 8px; padding: 8px 12px; background: #F0FDF4; border: 1px solid #BBF7D0; color: #15803D; border-radius: 10px; font-size: 12px; }
 .xd-typing { display: inline-flex; gap: 4px; padding: 4px 0; }
 .xd-typing span { width: 6px; height: 6px; border-radius: 50%; background: #C4C4CC; animation: xd-bounce 1.2s infinite; }
 .xd-typing span:nth-child(2) { animation-delay: .2s; }
@@ -117,6 +127,7 @@ export class ChatWidget extends HTMLElement {
   private streaming = false;
   private unread = 0;
   private initialized = false;
+  private csatShown = false; // V2.0 CSAT：每个会话转人工后只弹出一次打分
   private panelOpen = false;
   private queueTipEl: HTMLElement | null = null;
   private queueTimer: number | null = null;
@@ -399,6 +410,11 @@ export class ChatWidget extends HTMLElement {
         row.appendChild(tip);
         botMsg.tipEl = tip;
         this.queueTipEl = tip;
+        // V2.0 CSAT：转人工后弹出满意度打分（每会话一次）
+        if (!this.csatShown) {
+          this.csatShown = true;
+          row.appendChild(this.buildCsatCard());
+        }
       }
       const fb = document.createElement("div");
       fb.className = "xd-feedback";
@@ -449,6 +465,50 @@ export class ChatWidget extends HTMLElement {
     } catch (err) {
       console.error("[xd-chat] feedback failed:", err);
     }
+  }
+
+  // ---------------- V2.0 CSAT 满意度打分 ----------------
+  private buildCsatCard(): HTMLElement {
+    const card = document.createElement("div");
+    card.className = "xd-csat";
+    let rating = 0;
+    card.innerHTML =
+      `<div class="xd-csat-q">本次服务体验如何？请为小答打分（1-5 星）</div>` +
+      `<div class="xd-csat-stars">${"<span data-v='5'>★</span><span data-v='4'>★</span><span data-v='3'>★</span><span data-v='2'>★</span><span data-v='1'>★</span>"}</div>` +
+      `<textarea placeholder="补充意见（可选）" rows="2"></textarea>` +
+      `<button class="xd-csat-submit" disabled>提交评分</button>`;
+    const stars = card.querySelectorAll<HTMLSpanElement>(".xd-csat-stars span");
+    const textarea = card.querySelector<HTMLTextAreaElement>("textarea")!;
+    const submit = card.querySelector<HTMLButtonElement>("button.xd-csat-submit")!;
+    const paint = (n: number) =>
+      stars.forEach((s) => s.classList.toggle("on", Number(s.dataset.v) <= n));
+    stars.forEach((s) =>
+      s.addEventListener("click", () => {
+        rating = Number(s.dataset.v);
+        paint(rating);
+        submit.disabled = false;
+      }),
+    );
+    submit.addEventListener("click", async () => {
+      submit.disabled = true;
+      try {
+        await submitCsat({
+          session_id: this.sessionId,
+          visitor_token: this.visitorToken,
+          rating,
+          comment: textarea.value.trim() || undefined,
+        });
+        const done = document.createElement("div");
+        done.className = "xd-csat-done";
+        done.textContent = `已记录您的 ${rating} 星评分，感谢反馈！`;
+        card.replaceWith(done);
+      } catch (err) {
+        submit.disabled = false;
+        console.error("[xd-chat] csat failed:", err);
+        window.alert(`评分提交失败：${String(err)}`);
+      }
+    });
+    return card;
   }
 
   public async requestHandover(contact?: string) {

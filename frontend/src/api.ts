@@ -89,6 +89,19 @@ async function del<T>(path: string): Promise<T> {
   return resp.json() as Promise<T>;
 }
 
+async function put<T>(path: string, body: unknown): Promise<T> {
+  const resp = await fetch(path, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  if (!resp.ok) {
+    const text = await resp.text().catch(() => "");
+    throw new Error(`API ${path} 失败(${resp.status}): ${text.slice(0, 120)}`);
+  }
+  return resp.json() as Promise<T>;
+}
+
 export interface QueueStatus {
   queue_id: number;
   position: number | null;
@@ -107,6 +120,15 @@ export interface OpsStats {
   feedback_up: number;
   feedback_down: number;
   up_rate: number | null;
+  csat_total?: number;
+  csat_avg?: number | null;
+  csat_dist?: Record<string, number>;
+}
+
+export interface RuntimeState {
+  mode: "auto" | "handover" | "off";
+  gray_percent: number;
+  kill_switch: boolean;
 }
 
 export interface HandoverItem {
@@ -127,6 +149,8 @@ export interface BadCaseItem {
   context: string | null;
   answer: string | null;
   created_at: string;
+  status?: "open" | "resolved" | "ignored";
+  note?: string;
 }
 
 export function fetchQueueStatus(queueId: number): Promise<QueueStatus> {
@@ -147,6 +171,38 @@ export function fetchBadCases(limit = 20): Promise<BadCaseItem[]> {
 
 export async function completeHandover(queueId: number): Promise<{ ok: boolean; queue_id: number }> {
   return post(`/api/v1/ops/handovers/${queueId}/complete`, {});
+}
+
+// ---------------- V2.0 运行控制（Kill Switch + 灰度） ----------------
+export function fetchRuntime(): Promise<RuntimeState> {
+  return get<RuntimeState>("/api/v1/ops/runtime");
+}
+
+export function updateRuntime(patch: Partial<Pick<RuntimeState, "mode" | "gray_percent">>): Promise<RuntimeState> {
+  return put<RuntimeState>("/api/v1/ops/runtime", patch);
+}
+
+// ---------------- V2.0 Bad Case 管理 ----------------
+export function setBadCaseStatus(
+  feedbackId: number,
+  status: "open" | "resolved" | "ignored",
+  note = "",
+): Promise<{ ok: boolean; feedback_id: number; status: string; note: string }> {
+  return post(`/api/v1/ops/badcases/${feedbackId}/status`, { status, note });
+}
+
+// ---------------- V2.0 CSAT 满意度 ----------------
+export function submitCsat(payload: {
+  session_id: string;
+  visitor_token: string;
+  rating: number;
+  comment?: string;
+}): Promise<{ ok: boolean; rating: number }> {
+  return post("/api/v1/csat", payload);
+}
+
+export function fetchCsat(): Promise<{ csat_total: number; csat_avg: number | null; csat_dist: Record<string, number> }> {
+  return get("/api/v1/ops/csat");
 }
 
 // ---------------- V2.0 坐席 AI Copilot ----------------
@@ -272,7 +328,7 @@ export function createFAQ(faq: FAQPayload, createdBy = "ops"): Promise<{ draft_i
 }
 
 export function updateFAQ(faqId: string, faq: FAQPayload, createdBy = "ops"): Promise<{ draft_id: number; faq_id: string; status: string }> {
-  return post(`/api/v1/kb/faqs/${faqId}`, { faq, created_by: createdBy });
+  return put(`/api/v1/kb/faqs/${faqId}`, { faq, created_by: createdBy });
 }
 
 export function deleteFAQ(faqId: string, createdBy = "ops"): Promise<{ draft_id: number; faq_id: string; status: string }> {

@@ -1,14 +1,60 @@
-"""运营统计 + 坐席工作台（V1.5 看板 / V2.0 Copilot）。"""
+"""运营统计 + 坐席工作台 + 运行控制（V1.5 看板 / V2.0 Copilot + Kill Switch + Bad Case + CSAT）。"""
 from __future__ import annotations
 
 import logging
 
 from fastapi import APIRouter, HTTPException
 
+from app.models.schemas import BadCaseStatusRequest, CsatSubmitRequest, RuntimeUpdateRequest
 from app.storage.db import db
+from app.storage.rate_limit import verify_visitor_token
+from app.storage.runtime_control import runtime
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/v1", tags=["ops"])
+
+
+# ================= V2.0 运行控制（Kill Switch + 灰度开关）=================
+@router.get("/ops/runtime")
+async def ops_runtime():
+    """当前服务模式与灰度状态（运营看板运行控制面板）。"""
+    return runtime.state()
+
+
+@router.put("/ops/runtime")
+async def ops_runtime_update(req: RuntimeUpdateRequest):
+    """一键切换：mode=auto 正常 / handover 全局转人工 / off 维护下线；gray_percent 灰度放量比例。"""
+    if req.mode is not None and not runtime.set_mode(req.mode):
+        raise HTTPException(status_code=400, detail="invalid mode, must be auto/handover/off")
+    if req.gray_percent is not None and not runtime.set_gray_percent(req.gray_percent):
+        raise HTTPException(status_code=400, detail="invalid gray_percent, must be 0-100")
+    return runtime.state()
+
+
+# ================= V2.0 Bad Case 管理 =================
+@router.post("/ops/badcases/{feedback_id}/status")
+async def ops_badcase_status(feedback_id: int, req: BadCaseStatusRequest):
+    """运营标记点踩记录处理状态：open / resolved / ignored + 备注。"""
+    if not db.set_badcase_status(feedback_id, req.status, req.note):
+        raise HTTPException(status_code=404, detail="badcase not found or invalid status")
+    return {"ok": True, "feedback_id": feedback_id, "status": req.status, "note": req.note}
+
+
+# ================= V2.0 CSAT 满意度 =================
+@router.post("/csat")
+async def csat_submit(req: CsatSubmitRequest):
+    """满意度打分（widget 弹出）：需有效 Visitor Token + 1-5 星。"""
+    if req.visitor_token and not verify_visitor_token(req.visitor_token, req.session_id):
+        raise HTTPException(status_code=401, detail="invalid visitor token")
+    if not db.add_csat(req.session_id, req.rating, req.comment):
+        raise HTTPException(status_code=400, detail="rating must be 1-5")
+    return {"ok": True, "rating": req.rating}
+
+
+@router.get("/ops/csat")
+async def ops_csat():
+    """满意度统计：总量 / 平均分 / 星级分布。"""
+    return db.csat_stats()
 
 
 @router.get("/ops/stats")
@@ -21,6 +67,8 @@ async def ops_stats():
     stats["handover_rate"] = round(1.0 - stats["auto_rate"], 4)
     # V1.5：点赞率（feedback 口径）
     stats.update(db.feedback_stats())
+    # V2.0：CSAT 满意度
+    stats.update(db.csat_stats())
     return stats
 
 

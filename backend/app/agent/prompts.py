@@ -192,6 +192,10 @@ HANDOVER_QUEUED_MSG = (
     "已经为您登记啦！人工客服接入后会第一时间回复您。排队期间您还可以继续问我其他问题～"
 )
 
+MAINTENANCE_MSG = (
+    "客服小助手正在维护升级中，暂时无法回答问题，请您稍后再来～给您带来不便非常抱歉。"
+)
+
 
 def format_context(results: list[dict]) -> str:
     """把检索候选格式化为知识库上下文字段。"""

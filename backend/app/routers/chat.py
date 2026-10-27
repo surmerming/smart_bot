@@ -11,12 +11,14 @@ from fastapi.responses import StreamingResponse
 
 from app.agent.memory import compress_history, extract_facts, needs_summary, window_size
 from app.agent.orchestrator import Orchestrator
+from app.agent.prompts import HANDOVER_QUEUED_MSG, MAINTENANCE_MSG
 from app.config import settings
 from app.models.schemas import ChatInitRequest, ChatInitResponse, ChatStreamRequest, HandoverRequest, HandoverResponse
 from app.storage.cache import answer_cache, normalize_query
 from app.storage.db import db, new_session_id
 from app.storage.kb import kb
 from app.storage.rate_limit import generate_visitor_token, verify_visitor_token
+from app.storage.runtime_control import runtime
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/v1", tags=["chat"])
@@ -68,6 +70,7 @@ async def chat_init(req: ChatInitRequest):
         quick_chips=settings.QUICK_CHIPS,
         history=history,
         status=(db.get_session(session_id) or {}).get("status", "AGENT_ACTIVE"),
+        gray=runtime.is_gray_session(session_id),
     )
 
 
@@ -93,10 +96,44 @@ async def chat_stream(req: ChatStreamRequest, request: Request):
     if not verify_visitor_token(req.visitor_token, req.session_id):
         raise HTTPException(status_code=401, detail="invalid visitor token")
 
+    # 1.5) V2.0 Kill Switch：维护模式全切（不落库不调 LLM 不入队）
+    if runtime.is_offline:
+        return StreamingResponse(
+            _sse("meta", {"status": "maintenance", "handover": False, "quick_replies": []})
+            + _sse("text", {"content": MAINTENANCE_MSG})
+            + _sse("done", {"message_id": "", "handover": False, "handover_reason": "kill_switch_off"}),
+            media_type="text/event-stream",
+        )
+
     # 2) 会话存在性
     session = db.get_session(req.session_id)
     if session is None:
         raise HTTPException(status_code=404, detail="session not found")
+
+    # 2.5) V2.0 Kill Switch：全局转人工半切（不走检索/LLM，直接登记人工）
+    if runtime.is_handover_all:
+        db.add_message(req.session_id, "user", req.message)
+        db.update_session(req.session_id, turn_count=session.get("turn_count", 0) + 1)
+        summary = f"运行控制：全局转人工（Kill Switch）。用户消息：{req.message[:60]}"
+        qid = db.enqueue_handover(req.session_id, summary)
+
+        async def handover_stream():
+            yield _sse("meta", {"status": "handover", "handover": True, "handover_reason": "kill_switch_all",
+                                "quick_replies": settings.HANDOVER_QUICK_REPLIES})
+            for chunk in _split_text(HANDOVER_QUEUED_MSG):
+                yield _sse("text", {"content": chunk})
+            yield _sse("done", {"message_id": "", "handover": True, "handover_reason": "kill_switch_all",
+                                "handover_summary": summary})
+            yield _sse("summary", {"message": "已转人工排队（全局转人工）", "queue_id": qid,
+                                   "session_status": "HANDOVER"})
+
+        db.update_session(req.session_id, status="HANDOVER")
+        await _notify_and_build_copilot(qid, req.session_id)
+        return StreamingResponse(
+            handover_stream(),
+            media_type="text/event-stream",
+            headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+        )
 
     # 3) 输入长度拦截（撑爆 Context 的乱码）
     if len(req.message) > settings.MAX_INPUT_LEN:
@@ -224,6 +261,8 @@ async def handover(req: HandoverRequest):
     """手动触发转人工 + 预留言。"""
     if not verify_visitor_token(req.visitor_token, req.session_id):
         raise HTTPException(status_code=401, detail="invalid visitor token")
+    if runtime.is_offline:
+        raise HTTPException(status_code=503, detail="service maintenance")
     session = db.get_session(req.session_id)
     if session is None:
         raise HTTPException(status_code=404, detail="session not found")

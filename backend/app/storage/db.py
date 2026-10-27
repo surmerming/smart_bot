@@ -62,7 +62,9 @@ class Database:
                 query TEXT,
                 context TEXT,
                 answer TEXT,
-                created_at TEXT
+                created_at TEXT,
+                status TEXT DEFAULT 'open',   -- V2.0 Bad Case 管理：open/resolved/ignored
+                note TEXT DEFAULT ''          -- V2.0 Bad Case 管理：处理备注
             );
             CREATE TABLE IF NOT EXISTS handover_queue (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -94,12 +96,26 @@ class Database:
                 operator TEXT DEFAULT 'ops',
                 created_at TEXT
             );
+            -- V2.0 CSAT 满意度：会话结束后 1-5 星打分（widget 弹出）
+            CREATE TABLE IF NOT EXISTS csat (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                session_id TEXT,
+                rating INTEGER,              -- 1-5
+                comment TEXT DEFAULT '',
+                created_at TEXT
+            );
             """
         )
         # V2.0 迁移：坐席 Copilot 数据列（工单卡片 + 回复模板），旧库自动加列
         cols = [r[1] for r in conn.execute("PRAGMA table_info(handover_queue)").fetchall()]
         if "copilot" not in cols:
             conn.execute("ALTER TABLE handover_queue ADD COLUMN copilot TEXT DEFAULT '{}'")
+        # V2.0 迁移：Bad Case 处理状态列，旧库自动加列
+        fb_cols = [r[1] for r in conn.execute("PRAGMA table_info(feedback)").fetchall()]
+        if "status" not in fb_cols:
+            conn.execute("ALTER TABLE feedback ADD COLUMN status TEXT DEFAULT 'open'")
+        if "note" not in fb_cols:
+            conn.execute("ALTER TABLE feedback ADD COLUMN note TEXT DEFAULT ''")
         conn.commit()
         conn.close()
 
@@ -216,6 +232,54 @@ class Database:
             ).fetchall()
             conn.close()
         return [dict(r) for r in rows]
+
+    # ================= V2.0 Bad Case 管理：处理状态流转 =================
+    def set_badcase_status(self, feedback_id: int, status: str, note: str = "") -> bool:
+        """运营标记处理状态：open / resolved / ignored，附处理备注。"""
+        if status not in ("open", "resolved", "ignored"):
+            return False
+        with self._lock:
+            conn = self._connect()
+            cur = conn.execute(
+                "UPDATE feedback SET status=?, note=? WHERE id=? AND value='down'",
+                (status, note, feedback_id),
+            )
+            conn.commit()
+            changed = cur.rowcount > 0
+            conn.close()
+        return changed
+
+    # ================= V2.0 CSAT 满意度 =================
+    def add_csat(self, session_id: str, rating: int, comment: str = "") -> bool:
+        if not 1 <= rating <= 5:
+            return False
+        now = time.strftime("%Y-%m-%d %H:%M:%S")
+        with self._lock:
+            conn = self._connect()
+            conn.execute(
+                "INSERT INTO csat (session_id, rating, comment, created_at) VALUES (?, ?, ?, ?)",
+                (session_id, rating, comment, now),
+            )
+            conn.commit()
+            conn.close()
+        return True
+
+    def csat_stats(self) -> dict:
+        with self._lock:
+            conn = self._connect()
+            row = conn.execute(
+                "SELECT COUNT(*) AS cnt, AVG(rating) AS avg_rating FROM csat"
+            ).fetchone()
+            dist = conn.execute(
+                "SELECT rating, COUNT(*) AS cnt FROM csat GROUP BY rating ORDER BY rating"
+            ).fetchall()
+            conn.close()
+        total = row["cnt"] or 0
+        return {
+            "csat_total": total,
+            "csat_avg": round(row["avg_rating"], 2) if row["avg_rating"] is not None else None,
+            "csat_dist": {r["rating"]: r["cnt"] for r in dist},
+        }
 
     # ================= 人工排队（留言转人工，MVP 无 WebSocket）=================
     def enqueue_handover(self, session_id: str, summary: str, contact: str | None = None) -> int:

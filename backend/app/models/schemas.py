@@ -75,6 +75,26 @@ class RollbackRequest(BaseModel):
     created_by: str = Field("ops", max_length=64)
 
 
+# ---------- V2.0 运行控制（Kill Switch / 灰度） ----------
+class RuntimeUpdateRequest(BaseModel):
+    mode: Optional[str] = None  # auto / handover / off
+    gray_percent: Optional[int] = None  # 0-100
+
+
+# ---------- V2.0 Bad Case 管理 ----------
+class BadCaseStatusRequest(BaseModel):
+    status: str  # open / resolved / ignored
+    note: str = ""
+
+
+# ---------- V2.0 CSAT 满意度 ----------
+class CsatSubmitRequest(BaseModel):
+    session_id: str
+    visitor_token: str = ""
+    rating: int  # 1-5
+    comment: str = ""
+
+
 # ---------- 响应 ----------
 class ChatInitResponse(BaseModel):
     session_id: str
@@ -84,6 +104,7 @@ class ChatInitResponse(BaseModel):
     quick_chips: list
     history: list  # [{role, content, created_at}]
     status: str = "AGENT_ACTIVE"
+    gray: bool = False  # V2.0 灰度开关：该会话是否命中灰度组（可观测/分流）
 
 
 class SessionBindResponse(BaseModel):

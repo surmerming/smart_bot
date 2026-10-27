@@ -156,6 +156,10 @@ npm run build      # 产物在 dist/，可交给任意静态托管或由后端�
 | `/api/v1/kb/versions` | GET | V2.0 版本历史（每次生效留完整快照） |
 | `/api/v1/kb/versions/{id}/rollback` | POST | V2.0 一键回滚到历史版本（快照→变更草稿→自动提交审核，主管审批通过后生效；被删 FAQ 可恢复） |
 | `/api/v1/kb/rebuild` | POST | V2.0 手动热更新兜底（正常路径审批通过即自动热更新） |
+| `/api/v1/ops/runtime` | GET/PUT | V2.0 运行控制：服务模式（auto 正常 / handover 全局转人工 / off 维护下线）+ 灰度放量比例 |
+| `/api/v1/ops/badcases/{id}/status` | POST | V2.0 Bad Case 管理：标记处理状态（open/resolved/ignored + 备注） |
+| `/api/v1/csat` | POST | V2.0 满意度打分（Widget 转人工后弹出 1-5 星，需 Visitor Token） |
+| `/api/v1/ops/csat` | GET | V2.0 满意度统计（总量 / 平均分 / 星级分布） |
 | `/ws/user?session_id=&visitor_token=` | WS | V2.0 用户端：排队进度 / 人工接入实时推送 |
 | `/ws/agent` | WS | V2.0 坐席端：新待办 / 完成事件实时广播（首帧下发快照） |
 
@@ -196,7 +200,10 @@ event: summary {"message":"已转人工排队…","queue_id":155,"session_status
 | 会话 | SQLite 持久化 + 滑动窗口（最近 5 轮）+ 状态机（AGENT_ACTIVE/CONFIRMING/HANDOVER，可打断）+ 匿名→登录绑定；**V1.5 分层记忆：L2 超窗增量摘要 + L3 结构化事实（订单号/型号/诉求）注入 Prompt** |
 | 安全防刷 | Visitor Token（HMAC 签名校验）+ IP 限流（10 次/分，内存实现可换 Redis）+ 30 轮硬上限 + 超长输入拦截 |
 | 流式 | DeepSeek V3（deepseek-chat 非推理）+ SSE 逐 token，首字 < 2s；**V1.5 高频缓存：Top20 首轮问题命中秒回（cached=true，不调 LLM）** |
-| 运营闭环 | V1.5 运营看板（自动化率/转人工率/点赞率/漏斗 + Bad Case 列表）+ Bad Case 归因 CLI（缺失/检索弱/生成质量三类 → 自动生成 FAQ 草案）；**V2.0 坐席 AI Copilot：转人工自动生成结构化工单卡片（核心诉求/订单号/Bot已答/未解决）+ 一键快捷回复模板 + 一键查询内部系统（Mock）**；**V2.0 知识库后台：FAQ CRUD 全走「草稿→提交审核→主管审批→生效」审批流，生效即原子写 faq.json + 索引热更新（kb.version+1 自动失效高频缓存）+ 版本历史快照，运营免写代码自主维护** |
+| 运营闭环 | V1.5 运营看板（自动化率/转人工率/点赞率/漏斗 + Bad Case 列表）+ Bad Case 归因 CLI（缺失/检索弱/生成质量三类 → 自动生成 FAQ 草案）；**V2.0 坐席 AI Copilot：转人工自动生成结构化工单卡片（核心诉求/订单号/Bot已答/未解决）+ 一键快捷回复模板 + 一键查询内部系统（Mock）**；**V2.0 知识库后台：FAQ CRUD 全走「草稿→提交审核→主管审批→生效」审批流，生效即原子写 faq.json + 索引热更新（kb.version+1 自动失效高频缓存）+ 版本历史快照 + 一键回滚，运营免写代码自主维护** |
+| 容错与灰度 | **V2.0 运行控制（Kill Switch）**：看板一键切换 正常服务 / 全局转人工（半切：所有对话直接登记人工，不调 LLM 不丢业务）/ 维护下线（全切：统一维护话术，不登记不入队），会话入口即时生效；**灰度开关**：按会话稳定哈希放量 0-100%（同会话全程同组，命中组 init 响应标记 gray=true 可观测） |
+| 体验闭环 | **V2.0 CSAT 满意度**：Widget 转人工后弹出 1-5 星打分（每会话一次）+ 可选评论，看板展示平均分与星级分布；**Bad Case 管理**：看板点踩记录支持标记 已处理/已忽略 + 备注（open/resolved/ignored 状态流转），与知识库迭代形成闭环 |
+| 质量保障 | **V2.0 自动化巡检**（`scripts/healthcheck.py`）：每日定时检测 服务存活 / 核心指标（自动率/CSAT 阈值告警）/ 检索质量（黄金集 Hit@3）/ 待办积压 / Bad Case 积压，异常自动推送企微/钉钉机器人，报告落盘 `backend/logs/` |
 
 ## 六、测试与评估
 
@@ -205,24 +212,31 @@ event: summary {"message":"已转人工排队…","queue_id":155,"session_status
 cd backend && python tests/eval.py
 
 # 2) 接口测试（Mock LLM，离线）
-cd backend && python -m pytest tests/test_api.py tests/test_badcase_report.py tests/test_v2_ws_copilot.py tests/test_kb_admin.py -v
+cd backend && python -m pytest tests/test_api.py tests/test_badcase_report.py tests/test_v2_ws_copilot.py tests/test_kb_admin.py tests/test_v2_ops.py -v
 
 # 3) 并发压测（默认进程内 Mock，零成本；--base 连真实后端）
 cd backend && python tests/load_test.py --concurrency 20 --total 120
 
 # 4) 本地一键全量检查（测试 + 评估 + 压测冒烟 + 前端构建）
 ./scripts/check.sh
+
+# 5) 自动化巡检（V2.0：健康/指标/检索质量/积压，异常告警）
+python scripts/healthcheck.py                    # 一次性巡检
+./scripts/install-cron.sh 08:00                  # 安装每日 08:00 CronJob
+./scripts/install-cron.sh --remove               # 卸载
+# 告警推送：export WECHAT_WEBHOOK=... / DINGTALK_WEBHOOK=...（企微/钉钉群机器人）
+# 阈值可用环境变量覆盖：XD_MIN_AUTO_RATE / XD_MAX_PENDING_HANDOVERS / XD_MAX_OPEN_BADCASES / XD_HIT3_THRESHOLD
 ```
 
 - `tests/eval.py` 输出 Hit@3 / MRR / 高风险红线命中 / 否定句检查，并列出检索失败案例（建议补变体问法）。
 - **CI 流水线**（`.github/workflows/ci.yml`）：push/PR 自动跑 pytest + eval + 压测冒烟 + 前端 build，防负向优化。
 
-**当前基准（2026-10-27 V2.0 验证）**：黄金集 100 条命中评估 Hit@3 = 100%、MRR = 0.993（否定句 5/5、高风险红线 10/10、低置信转人工 10/10）；接口测试 31/31 通过（含 Query Rewrite、分层记忆 L2/L3、高频缓存、排队进度、坐席完成、点赞率、Bad Case 归因、WS 快照/实时广播/Token 鉴权、Copilot 卡片/模板/查询、**知识库后台 11/11：新建/编辑/删除全流程审批生效 + 热更新检索命中 + 驳回不生效 + 状态机防护 + 输入校验 + 一键回滚（编辑回滚/删除恢复/一致性 409/无快照 409）**）；进程内并发压测 320 请求成功率 100%、P95 137ms、吞吐 85.8 req/s；前端 `npm run build` 通过（官网 / 坐席 / 看板 / 知识库后台四页）。**DeepSeek 真实链路已验证**：V1.5 全项 + V2.0 WS 实时排队（转人工 → 坐席秒收新待办、用户 WS 收到位置推送、坐席完成 → 双方实时通知）+ Copilot 真实 LLM 生成（工单卡片正确提取订单号 JD202610270088、3 条可用回复模板、内部系统 Mock 查询）+ **知识库后台真实热更新端到端（新建 faq_041 → 提交 → 审批 → faq.json 落盘 41 条 + 检索命中 + 版本留档 → 删除审批 → 恢复 40 条）+ 一键回滚真实链路（编辑两次 → 回滚旧版生效 / 删除 → 回滚恢复，冒烟后现场完全还原）**。
+**当前基准（2026-10-27 V2.0 验证）**：黄金集 100 条命中评估 Hit@3 = 100%、MRR = 0.993（否定句 5/5、高风险红线 10/10、低置信转人工 10/10）；接口测试 43/43 通过（含 Query Rewrite、分层记忆 L2/L3、高频缓存、排队进度、坐席完成、点赞率、Bad Case 归因、WS 快照/实时广播/Token 鉴权、Copilot 卡片/模板/查询、**知识库后台 11/11：新建/编辑/删除全流程审批生效 + 热更新检索命中 + 驳回不生效 + 状态机防护 + 输入校验 + 一键回滚（编辑回滚/删除恢复/一致性 409/无快照 409）**、**运行控制 7/7：Kill Switch 维护全切/全局转人工半切/恢复 auto/离线拒转人工/灰度 0-100-50% 分流+同会话同组**、**Bad Case 流转 2/2 + CSAT 打分统计/防护 3/3**）；进程内并发压测 320 请求成功率 100%、P95 137ms、吞吐 85.8 req/s；前端 `npm run build` 通过（官网 / 坐席 / 看板 / 知识库后台四页）。**DeepSeek 真实链路已验证**：V1.5 全项 + V2.0 WS 实时排队（转人工 → 坐席秒收新待办、用户 WS 收到位置推送、坐席完成 → 双方实时通知）+ Copilot 真实 LLM 生成（工单卡片正确提取订单号 JD202610270088、3 条可用回复模板、内部系统 Mock 查询）+ 知识库后台真实热更新端到端（新建 faq_041 → 提交 → 审批 → faq.json 落盘 41 条 + 检索命中 + 版本留档 → 删除审批 → 恢复 40 条）+ 一键回滚真实链路（编辑两次 → 回滚旧版生效 / 删除 → 回滚恢复）+ **运行控制真实链路（维护模式回复维护话术不入队 / 全局转人工实时生成排队号 / 灰度 100%-0% init 标记正确）+ Bad Case 真实流转（open→resolved+备注）+ CSAT 真实打分统计（5/4 星入账）**，全部冒烟后现场完全还原（csat/feedback/handover/sessions 清空、runtime 恢复 auto）。**自动化巡检 5 项全绿**（服务存活 / 核心指标 / 检索质量 Hit@3=100% / 待办积压 0 / Bad Case 积压 0）。
 
 ## 七、生产演进路线（V3.0 计划）
 
 - **检索**：TF-IDF → 豆包 text-embedding / BGE-M3 + Qdrant（`docker-compose.yml` 已预留）
-- **运营**：Langfuse LLM Trace、自动化巡检 CronJob、FAQ 审批流
+- **运营**：Langfuse LLM Trace、FAQ 审批流（已交付）、自动化巡检 CronJob（已交付：`scripts/healthcheck.py` + `install-cron.sh`）
 - **安全**：Cloudflare + Turnstile 无感人机验证、Redis 限流、坐席 WS 接入真实鉴权（AGENT_WS_TOKEN 已留配置位）
 - **Copilot 增强**：内部系统查询接真实 API（当前 Mock 标注开发期演示）、回复模板纳入运营审批、多坐席会话协作
 

@@ -48,6 +48,31 @@
       .funnel .col .bar > i.orange { background: #F59E0B; }
       .funnel .col .num { font-size: 16px; font-weight: 700; }
       .funnel .col .label { font-size: 12px; color: #6B7280; }
+      /* V2.0 运行控制 */
+      .rc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+      .rc-actions { display: flex; gap: 10px; }
+      .rc-btn { flex: 1; padding: 12px 8px; border-radius: 10px; border: 1px solid #E7E8EA; background: #fff; cursor: pointer; font-size: 13px; line-height: 1.5; text-align: center; }
+      .rc-btn small { display: block; color: #9CA3AF; font-size: 11px; margin-top: 3px; }
+      .rc-btn.active { border-color: #0066CC; background: #EAF2FD; color: #0066CC; font-weight: 600; }
+      .rc-btn.danger.active { border-color: #EF4444; background: #FEF2F2; color: #EF4444; }
+      .rc-slider { display: flex; align-items: center; gap: 12px; margin-top: 12px; }
+      .rc-slider input[type="range"] { flex: 1; accent-color: #0066CC; }
+      .rc-slider .val { font-size: 14px; font-weight: 700; color: #0066CC; min-width: 44px; }
+      .rc-status { margin-top: 12px; font-size: 12px; padding: 8px 12px; border-radius: 8px; background: #F0FDF4; color: #15803D; }
+      .rc-status.warn { background: #FEF2F2; color: #EF4444; }
+      .rc-status.info { background: #F0F1F3; color: #374151; }
+      .badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 600; }
+      .badge.open { background: #FEF2F2; color: #EF4444; }
+      .badge.resolved { background: #F0FDF4; color: #15803D; }
+      .badge.ignored { background: #F3F4F6; color: #6B7280; }
+      .mini-btn { border: 1px solid #D4D4D8; background: #fff; border-radius: 6px; padding: 3px 8px; font-size: 11px; cursor: pointer; margin-right: 4px; }
+      .mini-btn:hover { border-color: #0066CC; color: #0066CC; }
+      .star { color: #F59E0B; font-size: 14px; }
+      .csat-bars .crow { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+      .csat-bars .cname { width: 60px; font-size: 12px; color: #6B7280; flex-shrink: 0; }
+      .csat-bars .cbar { flex: 1; height: 16px; background: #F0F1F3; border-radius: 4px; overflow: hidden; }
+      .csat-bars .cbar > i { display: block; height: 100%; background: #F59E0B; }
+      .csat-bars .cnum { width: 40px; text-align: right; font-size: 12px; color: #6B7280; flex-shrink: 0; }
     </style>
   </head>
   <body>
@@ -69,6 +94,25 @@
     <div class="wrap">
       <div class="cards" id="cards"></div>
       <div class="panel">
+        <h2>⚡ 运行控制（Kill Switch + 灰度）</h2>
+        <div class="rc-grid">
+          <div>
+            <div class="rc-actions" id="rc-modes">
+              <button class="rc-btn" data-mode="auto">正常服务<small>RAG + 自动回答全开</small></button>
+              <button class="rc-btn danger" data-mode="handover">全局转人工<small>半切：所有对话直接登记人工</small></button>
+              <button class="rc-btn danger" data-mode="off">维护下线<small>全切：回复维护话术</small></button>
+            </div>
+            <div class="rc-slider">
+              <span style="font-size:12px;color:#6B7280;flex-shrink:0">灰度放量</span>
+              <input type="range" id="rc-gray" min="0" max="100" step="5" value="0" />
+              <span class="val" id="rc-gray-val">0%</span>
+            </div>
+          </div>
+          <div class="rc-status" id="rc-status"></div>
+        </div>
+        <div class="tip">Kill Switch 生效后即影响全部在线会话：全局转人工 = 所有新消息直接登记人工排队（不调 LLM）；维护下线 = 统一回复维护话术（不登记不入队）。灰度 = 按会话稳定哈希放量（同会话全程同组），命中组在 init 响应中标记 gray=true 便于观测。</div>
+      </div>
+      <div class="panel">
         <h2>核心比率</h2>
         <div id="bars"></div>
         <div class="tip">统计口径（plan 6.1 铁律）：会话中只要发生过转人工，整个会话归入转人工类，不计入自动化率；自动化率 + 转人工率 = 100%。</div>
@@ -79,9 +123,13 @@
         <div class="tip">State A 纯 Agent 闭环 · State B+C 发生过转人工（Agent 未闭环）。用于定位优化方向，不用于结果统计。</div>
       </div>
       <div class="panel">
+        <h2>CSAT 满意度</h2>
+        <div id="csat"></div>
+      </div>
+      <div class="panel">
         <h2>最近 Bad Case（点踩）</h2>
         <table>
-          <thead><tr><th style="width:44%">用户问题</th><th>当时 Bot 回答</th><th style="width:130px">时间</th></tr></thead>
+          <thead><tr><th style="width:38%">用户问题</th><th>当时 Bot 回答</th><th style="width:120px">时间</th><th style="width:190px">状态 / 处理</th></tr></thead>
           <tbody id="badcases"></tbody>
         </table>
       </div>
