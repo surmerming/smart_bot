@@ -1,0 +1,25 @@
+schema_version: 1
+module_path: backend/agent_orchestration/classifiers
+title: Agent 意图/情绪/幽默分类器
+scope:
+    - backend/app/agent/emotion.py
+    - backend/app/agent/humor.py
+    - backend/app/agent/intent.py
+source_files: []
+depends_on: []
+related_to: []
+kk_module_id: e057a02c-8690-42e6-abc5-7d559892dad1
+kk_ordinal: 1
+kk_cards:
+    architecture_design:
+        id: cfcae910-a984-4e2f-a70f-99313465a1f6
+        title: Agent 意图/情绪/幽默分类器
+    coding_conventions:
+        id: 76b8613d-e8e2-4bb2-aa80-ad4fa8369b69
+        title: Agent 意图/情绪/幽默分类器
+    overview:
+        id: 85fb43f7-63f4-407f-af12-3513c1e112ed
+        title: Agent 意图/情绪/幽默分类器
+    tech_stack:
+        id: 7311e588-70d4-42e4-84b8-489bb0cf69b9
+        title: Agent 意图/情绪/幽默分类器

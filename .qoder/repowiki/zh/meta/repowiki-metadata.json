@@ -1,0 +1,1966 @@
+{
+  "wiki_repo": {
+    "id": "4f399243-b96c-bb59-b46b-301a2617f505",
+    "name": "smart_bot",
+    "progress_status": "completed",
+    "wiki_present_status": "COMPLETED",
+    "recovery_checkpoint": "wiki_generation_completed",
+    "last_commit_id": "ec51ab45aac655017c4a3783a1e93497f92518a1",
+    "last_commit_update": "2026-11-08T13:20:26Z",
+    "gmt_create": "2026-11-08T13:20:26Z",
+    "gmt_modified": "2026-11-08T13:20:26Z",
+    "extend_info": "{\"language\":\"zh\",\"active\":true,\"branch\":\"main\"}"
+  },
+  "wiki_catalogs": [
+    {
+      "id": "2477fb36-1b73-46d5-8b82-ada117d75cca",
+      "repo_id": "4f399243-b96c-bb59-b46b-301a2617f505",
+      "name": "TF-IDF 向量索引",
+      "description": "tfidf-index",
+      "prompt": "创建 TF-IDF 向量索引的详细文档。深入解释 TfidfIndex 类的实现原理，包括词表构建、IDF 计算、加权 TF-IDF 向量化和 L2 归一化过程。详细说明 dense_scores 方法中查询向量与文档余弦相似度的计算实现，以及 doc_weights 参数如何实现问法权重 1.0、答案权重 0.35 的差异化匹配。包含 IDF 公式的数学推导、稀疏向量存储优化、内存占用分析。提供性能调优参数说明，如词汇过滤阈值、向量维度控制等。",
+      "progress_status": "completed",
+      "dependent_files": "backend/app/storage/kb.py",
+      "gmt_create": "2026-11-08T13:20:26Z",
+      "gmt_modified": "2026-11-08T13:20:26Z",
+      "parent_id": "a2bafc7e-dcd2-4bd4-add3-5730312c0f37",
+      "layer_level": 3,
+      "kk_dependent_files": [
+        "backend/app/storage/kb.py"
+      ]
+    },
+    {
+      "id": "41da046e-fe85-4ad7-a6a5-ddaafe61cc54",
+      "repo_id": "4f399243-b96c-bb59-b46b-301a2617f505",
+      "name": "TF-IDF 与 BM25 双路召回",
+      "description": "tfidf-bm25-retrieval",
+      "prompt": "创建 TF-IDF 与 BM25 双路召回算法的详细文档。深入解释 TfidfIndex 类的实现原理，包括文档频率统计、IDF（逆文档频率）计算、向量归一化和余弦相似度评分机制。详细说明 BM25 算法的数学公式和参数配置：k1=1.5（词频饱和参数）、b=0.75（文档长度归一化参数），以及文档长度对评分的影响。解释两种检索方法如何并行执行并返回独立的评分结果，为后续的 RRF 融合做准备。包含具体的代码示例，展示如何构建索引、执行查询和获取相关度分数。说明中文分词在两种算法中的处理方式，以及如何处理未登录词和标点符号。",
+      "progress_status": "completed",
+      "dependent_files": "backend/app/storage/kb.py",
+      "gmt_create": "2026-11-08T13:20:26Z",
+      "gmt_modified": "2026-11-08T13:20:26Z",
+      "parent_id": "93c25cc7-c695-43b2-b04d-efdfa12193e5",
+      "layer_level": 3,
+      "kk_dependent_files": [
+        "backend/app/storage/kb.py"
+      ]
+    },
+    {
+      "id": "41f26915-4cba-47ef-8e10-0f4734cab616",
+      "repo_id": "4f399243-b96c-bb59-b46b-301a2617f505",
+      "name": "SQLite 数据库架构",
+      "description": "sqlite-schema",
+      "prompt": "创建 SQLite 数据库架构的详细文档。深入解释所有表结构定义：sessions（会话主表，含 status、turn_count、meta 等字段）、messages（消息历史，按 session_id 索引）、feedback（反馈与 Bad Case 管理，含 status/note 字段）、handover_queue（人工转接队列，含 copilot 字段）、faq_drafts（FAQ 变更草稿与审批流）、faq_versions（知识库版本历史快照）、csat（CSAT 满意度评分）。详细说明表间关系、索引设计（idx_messages_session）、WAL 模式配置、线程安全机制（threading.Lock + 每线程独立连接）。包含数据迁移脚本逻辑（ALTER TABLE 自动加列）、默认值约束、JSON 字段存储策略。提供 ER 关系图和典型查询示例。",
+      "progress_status": "completed",
+      "dependent_files": "backend/app/storage/db.py",
+      "gmt_create": "2026-11-08T13:20:26Z",
+      "gmt_modified": "2026-11-08T13:20:26Z",
+      "parent_id": "f830ddcd-2dfa-4f83-a1b8-70c5450ab22e",
+      "layer_level": 3,
+      "kk_dependent_files": [
+        "backend/app/storage/db.py"
+      ]
+    },
+    {
+      "id": "4ab81fdc-4548-4c9e-b3d4-bc72667cd09b",
+      "repo_id": "4f399243-b96c-bb59-b46b-301a2617f505",
+      "name": "RAG 智能问答引擎",
+      "description": "rag-qa-engine",
+      "prompt": "创建 RAG 智能问答引擎的详细文档。深入解释 Orchestrator 编排器的工作流程：Query Rewrite → Intent Recognition → Knowledge Retrieval → LLM Generation → Hallucination Check → Response Formatting。详细说明 TF-IDF + BM25 双路召回机制，包括 jieba 分词、bigram 特征提取、权重计算和结果融合策略。解释 RRF（Reciprocal Rank Fusion）算法的实现原理，如何通过排名倒数求和实现无参数融合重排。描述 Query Rewrite 的子句拆解和关键词扩展机制。包含实际的代码示例，展示从用户输入到最终答案生成的完整调用链。说明性能优化策略，如 Top20 高频问题缓存、异步并发处理和流式响应传输。",
+      "progress_status": "completed",
+      "dependent_files": "backend/app/agent/orchestrator.py,backend/app/storage/kb.py,backend/app/agent/intent.py",
+      "gmt_create": "2026-11-08T13:20:26Z",
+      "gmt_modified": "2026-11-08T13:20:26Z",
+      "parent_id": "32015eb7-cc1f-42dd-be9e-cc230b8f119a",
+      "layer_level": 1,
+      "kk_dependent_files": [
+        "backend/app/agent/orchestrator.py",
+        "backend/app/storage/kb.py",
+        "backend/app/agent/intent.py"
+      ]
+    },
+    {
+      "id": "52371a91-41e7-4da6-9006-180fce9dfbdc",
+      "repo_id": "4f399243-b96c-bb59-b46b-301a2617f505",
+      "name": "Query Rewrite 查询改写",
+      "description": "query-rewrite",
+      "prompt": "创建 Query Rewrite 查询改写的详细文档。深入解释如何将用户口语化的问题转换为适合知识库检索的标准问法，包括输入预处理、LLM Prompt 设计、改写结果的后处理和验证机制。详细说明改写失败时的回退策略，包括原始 query 的使用和降级路径。提供具体的代码示例，展示不同类型问题的改写效果（如省略主语的问题、包含错别字的问题、复合问题等）。说明与意图识别系统的集成方式和性能优化考虑。",
+      "progress_status": "completed",
+      "dependent_files": "backend/app/agent/intent.py,backend/app/agent/prompts.py",
+      "gmt_create": "2026-11-08T13:20:26Z",
+      "gmt_modified": "2026-11-08T13:20:26Z",
+      "parent_id": "c05aa70f-07d8-4bee-867b-3d92fb98b63a",
+      "layer_level": 3,
+      "kk_dependent_files": [
+        "backend/app/agent/intent.py",
+        "backend/app/agent/prompts.py"
+      ]
+    },
+    {
+      "id": "bd509be3-126c-4e0b-9111-a2ab60380b86",
+      "repo_id": "4f399243-b96c-bb59-b46b-301a2617f505",
+      "name": "项目概述",
+      "description": "project-overview",
+      "prompt": "为 smart_bot RAG 驱动网页端客服 Agent 系统创建全面的项目概述文档。解释项目的核心价值、目标用户和主要功能特性，包括智能问答、情绪识别、防幻觉机制、转人工调度、Web Widget 嵌入、坐席 Copilot、运营管理平台等。描述整体技术架构（FastAPI + TypeScript + SQLite），说明前后端分离的设计模式和组件间交互关系。提供快速开始指南，包含开发环境搭建、一键启动命令和基本使用示例。面向初学者解释 RAG、SSE、Web Components 等核心概念，同时为有经验的开发者提供架构决策和技术选型说明。使用与代码库一致的术语，如 Orchestrator、KnowledgeBase、Session 状态机等。",
+      "progress_status": "completed",
+      "dependent_files": "backend/app/main.py,package.json,dev.sh,docker-compose.yml",
+      "gmt_create": "2026-11-08T13:20:26Z",
+      "gmt_modified": "2026-11-08T13:20:26Z",
+      "kk_dependent_files": [
+        "backend/app/main.py",
+        "package.json",
+        "dev.sh",
+        "docker-compose.yml"
+      ]
+    },
+    {
+      "id": "d2c493ba-d6ff-41dd-b79c-324b08fdeaf2",
+      "repo_id": "4f399243-b96c-bb59-b46b-301a2617f505",
+      "name": "Orchestrator 编排器",
+      "description": "orchestrator",
+      "prompt": "创建 Orchestrator 编排器的详细文档。深入解释管道编排模式如何实现情绪分级、查询重写、混合检索、置信度决策、LLM 生成、输出校验和转人工调度的完整流程。详细说明状态机（AGENT_ACTIVE → CONFIRMING → HANDOVER）的实现，包括确认状态的打断机制、防死循环逻辑、红灯熔断策略。阐述异步任务并行执行（情绪识别与查询重写并发）、NLI 否定句语义校验、RRF 融合重排结果处理。包含完整的调用时序图、状态转换图和异常处理路径。提供配置选项说明和性能优化建议。",
+      "progress_status": "completed",
+      "dependent_files": "backend/app/agent/orchestrator.py,backend/app/agent/emotion.py,backend/app/agent/intent.py,backend/app/agent/humor.py,backend/app/agent/prompts.py",
+      "gmt_create": "2026-11-08T13:20:26Z",
+      "gmt_modified": "2026-11-08T13:20:26Z",
+      "parent_id": "b32529e5-76a4-4aad-b12a-7af6cfe786ee",
+      "layer_level": 2,
+      "kk_dependent_files": [
+        "backend/app/agent/orchestrator.py",
+        "backend/app/agent/emotion.py",
+        "backend/app/agent/intent.py",
+        "backend/app/agent/humor.py",
+        "backend/app/agent/prompts.py"
+      ]
+    },
+    {
+      "id": "de9aa403-9b5e-4a14-8e7f-5a40ff55aeb0",
+      "repo_id": "4f399243-b96c-bb59-b46b-301a2617f505",
+      "name": "架构总览",
+      "description": "architecture-overview",
+      "prompt": "创建 smart_bot 系统的整体架构概览文档。描述前后端分离的技术架构，包括 FastAPI 后端服务、TypeScript 前端应用、SQLite 数据库的三层结构。绘制系统上下文图，展示用户浏览器、Web Widget、FastAPI 服务、LLM API、SQLite 之间的交互关系。说明核心设计原则：模块化、可扩展性、安全性、性能优化。解释技术选型理由：FastAPI 的异步高并发能力、SQLite 的零配置特性、Web Components 的原生兼容性。包含部署拓扑图和组件依赖关系图。",
+      "progress_status": "completed",
+      "dependent_files": "backend/app/main.py,backend/app/config.py,frontend/src/main.ts,frontend/vite.config.ts",
+      "gmt_create": "2026-11-08T13:20:26Z",
+      "gmt_modified": "2026-11-08T13:20:26Z",
+      "parent_id": "c3e95eda-d31d-4839-a3f0-1b84e5b5b3de",
+      "layer_level": 1,
+      "kk_dependent_files": [
+        "backend/app/main.py",
+        "backend/app/config.py",
+        "frontend/src/main.ts",
+        "frontend/vite.config.ts"
+      ]
+    },
+    {
+      "id": "e1cd05e8-6764-413b-be08-e7fc3a0b25dd",
+      "repo_id": "4f399243-b96c-bb59-b46b-301a2617f505",
+      "name": "Orchestrator 编排器主流程",
+      "description": "orchestrator-pipeline",
+      "prompt": "创建 Orchestrator 编排器的详细文档。深入解释 process_turn 方法的完整工作流程：用户主动转人工检测 → 防死循环检查 → 确认状态机处理 → 情绪识别与查询重写并行执行 → 红灯熔断判断 → 混合检索 → 置信度决策 → LLM 调用 → 高风险 FAQ 拦截 → 流式生成回答。详细说明每个阶段的输入输出、异常处理和状态流转。包含实际的代码示例，展示从用户输入到最终 SSE 事件流输出的完整调用链。解释 meta、text、done 三种事件类型的数据结构。说明与 Session 状态机的集成方式，包括 CONFIRMING 状态的中断机制和 unresolved_streak 计数器的工作原理。",
+      "progress_status": "completed",
+      "dependent_files": "backend/app/agent/orchestrator.py,backend/app/agent/prompts.py",
+      "gmt_create": "2026-11-08T13:20:26Z",
+      "gmt_modified": "2026-11-08T13:20:26Z",
+      "parent_id": "4ab81fdc-4548-4c9e-b3d4-bc72667cd09b",
+      "layer_level": 2,
+      "kk_dependent_files": [
+        "backend/app/agent/orchestrator.py",
+        "backend/app/agent/prompts.py"
+      ]
+    },
+    {
+      "id": "f2a253e9-3100-4b6a-a682-d443ae1b34ec",
+      "repo_id": "4f399243-b96c-bb59-b46b-301a2617f505",
+      "name": "聊天接口",
+      "description": "chat-api",
+      "prompt": "创建聊天接口的详细 API 文档。重点记录核心对话端点：POST /api/v1/chat/init（会话初始化，返回 session_id、visitor_token、品牌名、快捷标签和历史消息）和 POST /api/v1/chat/stream（SSE 流式对话）。详细说明 SSE 事件类型（meta、text、done、summary、blocked、limit、maintenance、handover）及其数据格式。记录请求参数 ChatInitRequest 和 ChatStreamRequest 的字段定义，包括 visitor_token 签名验证机制。说明防御机制：Visitor Token 校验、30 轮会话上限、超长输入拦截、高频缓存命中秒回。包含完整的请求/响应示例，涵盖正常流程、缓存命中、转人工、维护模式等场景。记录错误处理策略和状态码含义。",
+      "progress_status": "completed",
+      "dependent_files": "backend/app/routers/chat.py,backend/app/models/schemas.py",
+      "gmt_create": "2026-11-08T13:20:26Z",
+      "gmt_modified": "2026-11-08T13:20:26Z",
+      "parent_id": "f685ca35-0273-49c0-ad0c-d04c98b9c93d",
+      "layer_level": 1,
+      "kk_dependent_files": [
+        "backend/app/routers/chat.py",
+        "backend/app/models/schemas.py"
+      ]
+    },
+    {
+      "id": "0c1f1d7b-5d08-4936-b649-54cc56199823",
+      "repo_id": "4f399243-b96c-bb59-b46b-301a2617f505",
+      "name": "BM25 关键词检索",
+      "description": "bm25-retrieval",
+      "prompt": "创建 BM25 关键词检索的详细文档。深入解释 BM25 算法在 bm25_scores 方法中的具体实现，包括 k1（词频饱和参数）和 b（长度归一化参数）的作用机制。详细说明平均文档长度 _avgdl 的计算方式及其对检索效果的影响。阐述 tf * (k1 + 1) / (tf + k1 * (1 - b + b * dl / avgdl)) 公式的业务含义，以及如何通过调整参数平衡短查询和长文档的匹配效果。包含 BM25 与传统 TF-IDF 的差异对比，以及在中文语境下的适用性分析。",
+      "progress_status": "completed",
+      "dependent_files": "backend/app/storage/kb.py",
+      "gmt_create": "2026-11-08T13:20:26Z",
+      "gmt_modified": "2026-11-08T13:20:26Z",
+      "parent_id": "a2bafc7e-dcd2-4bd4-add3-5730312c0f37",
+      "layer_level": 3,
+      "order": 1,
+      "kk_dependent_files": [
+        "backend/app/storage/kb.py"
+      ]
+    },
+    {
+      "id": "14542221-8bf7-4d92-b96f-e4193a0ad004",
+      "repo_id": "4f399243-b96c-bb59-b46b-301a2617f505",
+      "name": "中文分词与特征工程",
+      "description": "chinese-tokenization",
+      "prompt": "创建中文分词与特征工程的详细文档。深入解释 jieba 分词库的使用方式，包括精确模式、搜索引擎模式的切换策略。详细说明停用词过滤机制，包括内置停用词表和自定义停用词的加载过程。重点解释 bigram 特征提取的实现：如何通过滑动窗口生成相邻词对，提升口语化变体和短语匹配能力。描述分词后的文本预处理流程，包括小写转换、标点去除、数字标准化等步骤。提供具体的代码示例，展示从原始中文文本到特征向量的完整转换过程。说明不同业务场景下的分词策略选择，以及如何通过调整分词参数优化检索效果。",
+      "progress_status": "completed",
+      "dependent_files": "backend/app/storage/kb.py",
+      "gmt_create": "2026-11-08T13:20:26Z",
+      "gmt_modified": "2026-11-08T13:20:26Z",
+      "parent_id": "93c25cc7-c695-43b2-b04d-efdfa12193e5",
+      "layer_level": 3,
+      "order": 1,
+      "kk_dependent_files": [
+        "backend/app/storage/kb.py"
+      ]
+    },
+    {
+      "id": "2067b70a-53e6-4854-ade2-32cb7481f3c7",
+      "repo_id": "4f399243-b96c-bb59-b46b-301a2617f505",
+      "name": "情绪识别与熔断机制",
+      "description": "emotion-control",
+      "prompt": "创建情绪识别与熔断机制的综合文档。详细解释 LEVEL_0~3 四级情绪分类体系：LEVEL_0（平静）、LEVEL_1（轻微不满）、LEVEL_2（明显愤怒）、LEVEL_3（极度激动/高风险）。说明基于规则的情绪识别算法，包括关键词匹配、语气分析、重复检测等策略。描述熔断触发条件：当情绪等级达到 LEVEL_2 或 LEVEL_3 时自动触发转人工流程。解释软转人工和硬转人工的区别：软转人工用于澄清挽留，硬转人工用于红灯熔断。包含情绪识别的 Prompt 设计、关键词库配置方法和熔断阈值调优建议。提供实际的业务场景示例，展示不同情绪状态下的处理流程。",
+      "progress_status": "completed",
+      "dependent_files": "backend/app/agent/emotion.py,backend/app/agent/orchestrator.py",
+      "gmt_create": "2026-11-08T13:20:26Z",
+      "gmt_modified": "2026-11-08T13:20:26Z",
+      "parent_id": "32015eb7-cc1f-42dd-be9e-cc230b8f119a",
+      "layer_level": 1,
+      "order": 1,
+      "kk_dependent_files": [
+        "backend/app/agent/emotion.py",
+        "backend/app/agent/orchestrator.py"
+      ]
+    },
+    {
+      "id": "275b72a6-d1c2-47f4-a6b0-3dd97eaff9b5",
+      "repo_id": "4f399243-b96c-bb59-b46b-301a2617f505",
+      "name": "会话管理接口",
+      "description": "session-api",
+      "prompt": "创建会话管理接口的详细 API 文档。记录会话绑定端点 POST /api/v1/session/bind，说明匿名会话与用户 ID 的绑定机制，以及登录瞬间的历史消息零丢失实现。详细记录反馈收集端点 POST /api/v1/feedback，包括点赞/点踩埋点的数据结构，点踩自动打标入库供 Bad Case 归因的机制。说明 SessionBindRequest、FeedbackRequest 等请求模型字段定义。包含请求/响应示例，展示匿名用户登录后会话绑定的完整流程和反馈数据的存储格式。",
+      "progress_status": "completed",
+      "dependent_files": "backend/app/routers/session.py,backend/app/models/schemas.py",
+      "gmt_create": "2026-11-08T13:20:26Z",
+      "gmt_modified": "2026-11-08T13:20:26Z",
+      "parent_id": "f685ca35-0273-49c0-ad0c-d04c98b9c93d",
+      "layer_level": 1,
+      "order": 1,
+      "kk_dependent_files": [
+        "backend/app/routers/session.py",
+        "backend/app/models/schemas.py"
+      ]
+    },
+    {
+      "id": "4002de2f-3fb6-43b7-be43-904c63b8320d",
+      "repo_id": "4f399243-b96c-bb59-b46b-301a2617f505",
+      "name": "会话状态机与生命周期",
+      "description": "session-state-machine",
+      "prompt": "创建会话状态机与生命周期的详细文档。深入解释会话状态流转：AGENT_ACTIVE → CONFIRMING → HANDOVER → CLOSED 等状态转换规则。详细说明会话创建流程（create_session）、状态更新（update_session）、用户绑定（bind_user）、会话重置（reset_session）的业务逻辑。阐述 30 轮对话上限控制机制、超时复位逻辑（plan 3.1-4：30 分钟无操作视为新会话，保留历史消息但不进入 Prompt）。包含会话元数据（meta JSON）的结构设计、anonymous_id 与 user_id 的关联关系。提供状态转换图、生命周期时序图和异常处理方案。",
+      "progress_status": "completed",
+      "dependent_files": "backend/app/storage/db.py",
+      "gmt_create": "2026-11-08T13:20:26Z",
+      "gmt_modified": "2026-11-08T13:20:26Z",
+      "parent_id": "f830ddcd-2dfa-4f83-a1b8-70c5450ab22e",
+      "layer_level": 3,
+      "order": 1,
+      "kk_dependent_files": [
+        "backend/app/storage/db.py"
+      ]
+    },
+    {
+      "id": "93c25cc7-c695-43b2-b04d-efdfa12193e5",
+      "repo_id": "4f399243-b96c-bb59-b46b-301a2617f505",
+      "name": "知识库检索引擎",
+      "description": "knowledge-retrieval",
+      "prompt": "创建知识库检索引擎的详细文档。深入解释 TF-IDF + BM25 双路召回机制的实现原理：jieba 中文分词、停用词过滤、bigram 特征提取（提升口语化变体匹配）、权重计算策略。详细说明 TfidfIndex 类的构建过程，包括文档频率统计、IDF 计算、向量归一化和余弦相似度计算。解释 BM25 算法的参数配置（k1=1.5, b=0.75）和文档长度归一化。描述 RRF（Reciprocal Rank Fusion）融合重排算法的具体实现，如何通过排名倒数求和无参数融合两个检索结果。包含实际的代码示例，展示从 FAQ 数据到索引构建再到查询检索的完整流程。说明性能优化策略，如向量化预计算和内存缓存机制。",
+      "progress_status": "completed",
+      "dependent_files": "backend/app/storage/kb.py,knowledge_base/build_kb.py",
+      "gmt_create": "2026-11-08T13:20:26Z",
+      "gmt_modified": "2026-11-08T13:20:26Z",
+      "parent_id": "4ab81fdc-4548-4c9e-b3d4-bc72667cd09b",
+      "layer_level": 2,
+      "order": 1,
+      "kk_dependent_files": [
+        "backend/app/storage/kb.py",
+        "knowledge_base/build_kb.py"
+      ]
+    },
+    {
+      "id": "a2bafc7e-dcd2-4bd4-add3-5730312c0f37",
+      "repo_id": "4f399243-b96c-bb59-b46b-301a2617f505",
+      "name": "知识库检索引擎",
+      "description": "knowledge-base-engine",
+      "prompt": "创建知识库检索引擎的详细文档。深入解释 TF-IDF 向量化实现和 BM25 关键词检索的双路检索架构，以及 RRF（Reciprocal Rank Fusion）融合重排算法的数学原理和代码实现。详细说明中文分词策略（jieba + bigram 特征）、停用词过滤、权重分配机制。阐述 FAQItem 数据模型设计、索引构建过程、搜索文本生成策略。包含否定词检测、风险关键词匹配、分类映射等辅助功能。提供检索性能调优参数、扩展为向量数据库的接口设计和迁移指南。",
+      "progress_status": "completed",
+      "dependent_files": "backend/app/storage/kb.py,knowledge_base/build_kb.py,knowledge_base/faq.json",
+      "gmt_create": "2026-11-08T13:20:26Z",
+      "gmt_modified": "2026-11-08T13:20:26Z",
+      "parent_id": "b32529e5-76a4-4aad-b12a-7af6cfe786ee",
+      "layer_level": 2,
+      "order": 1,
+      "kk_dependent_files": [
+        "backend/app/storage/kb.py",
+        "knowledge_base/build_kb.py",
+        "knowledge_base/faq.json"
+      ]
+    },
+    {
+      "id": "b32529e5-76a4-4aad-b12a-7af6cfe786ee",
+      "repo_id": "4f399243-b96c-bb59-b46b-301a2617f505",
+      "name": "核心组件",
+      "description": "core-components",
+      "prompt": "创建 smart_bot 核心组件的详细文档。深入解释 Orchestrator 编排器的管道模式实现，包括情绪识别、检索增强生成、决策引擎、转人工调度等子组件的协作关系。详细说明 KnowledgeBase 的 TF-IDF + BM25 双路检索机制和 RRF 融合重排算法。阐述 Database 层的 SQLite 会话管理和状态机实现。解释前端 Widget 的 Web Component 架构和 Shadow DOM 隔离机制。包含组件间的调用时序图和状态转换图。",
+      "progress_status": "completed",
+      "dependent_files": "backend/app/agent/orchestrator.py,backend/app/storage/kb.py,backend/app/storage/db.py,frontend/src/widget.ts",
+      "gmt_create": "2026-11-08T13:20:26Z",
+      "gmt_modified": "2026-11-08T13:20:26Z",
+      "parent_id": "c3e95eda-d31d-4839-a3f0-1b84e5b5b3de",
+      "layer_level": 1,
+      "order": 1,
+      "kk_dependent_files": [
+        "backend/app/agent/orchestrator.py",
+        "backend/app/storage/kb.py",
+        "backend/app/storage/db.py",
+        "frontend/src/widget.ts"
+      ]
+    },
+    {
+      "id": "bce35292-a987-4bda-9501-7a206b2ed685",
+      "repo_id": "4f399243-b96c-bb59-b46b-301a2617f505",
+      "name": "快速开始",
+      "description": "getting-started",
+      "prompt": "创建 smart_bot 项目的快速开始指南。提供详细的安装步骤，包括 Python 3.8+ 和 Node.js 环境要求、依赖安装、环境变量配置。详细说明 dev.sh 一键启动脚本的使用方法，以及 docker-compose 容器化部署方式。包含基本的使用示例：如何在前端页面嵌入聊天组件、如何进行第一次对话、如何访问管理后台。提供常见问题的故障排查指南，如端口冲突、依赖缺失、权限问题等。确保新用户能够在 10 分钟内完成环境搭建并运行第一个对话。",
+      "progress_status": "completed",
+      "dependent_files": "dev.sh,scripts/install-cron.sh,backend/requirements.txt,frontend/package.json",
+      "gmt_create": "2026-11-08T13:20:26Z",
+      "gmt_modified": "2026-11-08T13:20:26Z",
+      "order": 1,
+      "kk_dependent_files": [
+        "dev.sh",
+        "scripts/install-cron.sh",
+        "backend/requirements.txt",
+        "frontend/package.json"
+      ]
+    },
+    {
+      "id": "f95f1405-347d-4dd7-87bd-313439fcf8c6",
+      "repo_id": "4f399243-b96c-bb59-b46b-301a2617f505",
+      "name": "相似度决策机制",
+      "description": "similarity-decision",
+      "prompt": "创建相似度决策机制的详细文档。深入解释基于 TF-IDF 相似度的快速决策流程，包括 SIM_THRESHOLD_LOW 和 SIM_THRESHOLD_HIGH 两个阈值的作用和设计原理。详细说明零 LLM 调用路径的实现，如何在高相似度场景下直接返回答案以提升性能。描述相似度计算的具体算法、分词处理、bigram 特征提取等技术细节。提供不同相似度分数对应的决策结果示例，以及阈值调优的建议。说明该机制在整个智能问答流程中的位置和触发条件。",
+      "progress_status": "completed",
+      "dependent_files": "backend/app/agent/intent.py",
+      "gmt_create": "2026-11-08T13:20:26Z",
+      "gmt_modified": "2026-11-08T13:20:26Z",
+      "parent_id": "c05aa70f-07d8-4bee-867b-3d92fb98b63a",
+      "layer_level": 3,
+      "order": 1,
+      "kk_dependent_files": [
+        "backend/app/agent/intent.py"
+      ]
+    },
+    {
+      "id": "00cc32fe-892c-4ecf-b754-becb8381d39d",
+      "repo_id": "4f399243-b96c-bb59-b46b-301a2617f505",
+      "name": "数据流设计",
+      "description": "data-flow",
+      "prompt": "创建 smart_bot 的数据流设计文档。详细描述用户消息的完整处理链路：从前端 Widget 到 FastAPI 路由，经过 Orchestrator 编排，通过 KnowledgeBase 检索，调用 LLM 生成，最终通过 SSE 流式返回给前端。解释实时通信协议，包括 WebSocket 用于坐席通知、SSE 用于聊天响应。说明缓存策略，如 Top20 高频问题的秒回缓存机制。包含数据流向图和事件序列图，展示不同场景下的数据流转过程。",
+      "progress_status": "completed",
+      "dependent_files": "backend/app/routers/chat.py,backend/app/routers/ws.py,frontend/src/sse-client.ts,backend/app/storage/cache.py",
+      "gmt_create": "2026-11-08T13:20:26Z",
+      "gmt_modified": "2026-11-08T13:20:26Z",
+      "parent_id": "c3e95eda-d31d-4839-a3f0-1b84e5b5b3de",
+      "layer_level": 1,
+      "order": 2,
+      "kk_dependent_files": [
+        "backend/app/routers/chat.py",
+        "backend/app/routers/ws.py",
+        "frontend/src/sse-client.ts",
+        "backend/app/storage/cache.py"
+      ]
+    },
+    {
+      "id": "5032d6bf-daaf-4d2a-8d26-9d074ef9a6f7",
+      "repo_id": "4f399243-b96c-bb59-b46b-301a2617f505",
+      "name": "运营统计接口",
+      "description": "ops-api",
+      "prompt": "创建运营管理接口的详细 API 文档。记录运行控制端点：GET /api/v1/ops/runtime（查询服务模式）、PUT /api/v1/ops/runtime（切换 auto/handover/off 模式和灰度比例）。记录数据统计端点：GET /api/v1/ops/stats（自动化率、转人工率、CSAT 满意度）、GET /api/v1/ops/csat（满意度统计）。记录人工转接相关端点：GET /api/v1/ops/handovers（待办列表）、GET /api/v1/ops/queue/status（排队进度）、POST /api/v1/ops/handovers/{queue_id}/complete（完成工单）。记录 Bad Case 管理端点：GET /api/v1/ops/badcases、POST /api/v1/ops/badcases/{feedback_id}/status。记录 CSAT 提交端点 POST /api/v1/csat。说明 RuntimeUpdateRequest、BadCaseStatusRequest 等请求模型。包含运营看板数据结构和 Copilot 相关端点的详细说明。",
+      "progress_status": "completed",
+      "dependent_files": "backend/app/routers/ops.py,backend/app/models/schemas.py",
+      "gmt_create": "2026-11-08T13:20:26Z",
+      "gmt_modified": "2026-11-08T13:20:26Z",
+      "parent_id": "f685ca35-0273-49c0-ad0c-d04c98b9c93d",
+      "layer_level": 1,
+      "order": 2,
+      "kk_dependent_files": [
+        "backend/app/routers/ops.py",
+        "backend/app/models/schemas.py"
+      ]
+    },
+    {
+      "id": "c05aa70f-07d8-4bee-867b-3d92fb98b63a",
+      "repo_id": "4f399243-b96c-bb59-b46b-301a2617f505",
+      "name": "意图识别与语义校验",
+      "description": "intent-recognition",
+      "prompt": "创建意图识别与语义校验的详细文档。深入解释三级决策机制：基于相似度的快速决策（零 LLM 调用路径）、LLM can_answer 布尔判断、NLI 蕴含校验。详细说明 Query Rewrite 的工作原理，如何将口语化问题转换为适合检索的标准问法，以及失败时的回退机制。解释 decide 函数的阈值判断逻辑（SIM_THRESHOLD_LOW 和 SIM_THRESHOLD_HIGH），以及否定句的特殊处理流程。描述 NLI 校验如何判断用户查询与 FAQ 答案之间的语义关系（ENTAILMENT/CONTRADICTION/NEUTRAL）。包含实际的代码示例，展示不同场景下的决策路径和返回结果。说明与 Orchestrator 的集成方式和错误处理策略。",
+      "progress_status": "completed",
+      "dependent_files": "backend/app/agent/intent.py,backend/app/agent/prompts.py",
+      "gmt_create": "2026-11-08T13:20:26Z",
+      "gmt_modified": "2026-11-08T13:20:26Z",
+      "parent_id": "4ab81fdc-4548-4c9e-b3d4-bc72667cd09b",
+      "layer_level": 2,
+      "order": 2,
+      "kk_dependent_files": [
+        "backend/app/agent/intent.py",
+        "backend/app/agent/prompts.py"
+      ]
+    },
+    {
+      "id": "c3e95eda-d31d-4839-a3f0-1b84e5b5b3de",
+      "repo_id": "4f399243-b96c-bb59-b46b-301a2617f505",
+      "name": "系统架构",
+      "description": "system-architecture",
+      "prompt": "创建 smart_bot 系统的架构设计文档。描述整体架构模式，包括前后端分离、分层架构、模块化设计等。详细解释核心组件的职责和交互关系：FastAPI 后端服务、TypeScript 前端应用、SQLite 数据库、知识索引系统等。绘制系统上下文图和组件关系图，展示数据流向和调用链路。说明技术选型的考虑因素，包括 FastAPI 的异步优势、SQLite 的轻量级特性、Web Components 的浏览器兼容性等。阐述扩展点和集成方案，如 LLM 适配器、存储抽象层、WebSocket 实时通信等。包含部署拓扑、基础设施要求和性能考量。",
+      "progress_status": "completed",
+      "dependent_files": "backend/app/main.py,backend/app/config.py,frontend/src/main.ts,frontend/vite.config.ts",
+      "gmt_create": "2026-11-08T13:20:26Z",
+      "gmt_modified": "2026-11-08T13:20:26Z",
+      "order": 2,
+      "kk_dependent_files": [
+        "backend/app/main.py",
+        "backend/app/config.py",
+        "frontend/src/main.ts",
+        "frontend/vite.config.ts"
+      ]
+    },
+    {
+      "id": "d3ae0d24-07cb-4e8f-bd6f-069e0c452010",
+      "repo_id": "4f399243-b96c-bb59-b46b-301a2617f505",
+      "name": "RRF 融合重排",
+      "description": "rrf-fusion",
+      "prompt": "创建 RRF（Reciprocal Rank Fusion）融合重排的详细文档。深入解释 RRF 算法在 search 方法中的实现，包括密集检索和稀疏检索的双路召回策略。详细说明融合公式 1/(k + rank + 1) 的设计原理，其中 k=60 参数的选择依据和对排序稳定性的影响。阐述如何结合 dense_score 作为第二排序键，实现语义相似度优先的最终排序策略。包含不同 k 值对融合效果的影响分析，以及扩展多路召回（如向量数据库）时的 RRF 适配方案。",
+      "progress_status": "completed",
+      "dependent_files": "backend/app/storage/kb.py",
+      "gmt_create": "2026-11-08T13:20:26Z",
+      "gmt_modified": "2026-11-08T13:20:26Z",
+      "parent_id": "a2bafc7e-dcd2-4bd4-add3-5730312c0f37",
+      "layer_level": 3,
+      "order": 2,
+      "kk_dependent_files": [
+        "backend/app/storage/kb.py"
+      ]
+    },
+    {
+      "id": "e81147ab-cdeb-4ab2-b5b6-fc6a704b4b8e",
+      "repo_id": "4f399243-b96c-bb59-b46b-301a2617f505",
+      "name": "LLM Can Answer 判断",
+      "description": "llm-can-answer",
+      "prompt": "创建 LLM Can Answer 判断的详细文档。深入解释如何使用 LLM 对用户的模糊问题进行 can_answer 布尔判断，包括 Prompt 设计、系统指令、评估标准和输出格式。详细说明判断失败时的重试机制和错误处理策略。描述与 LLM API 的交互方式、超时控制和熔断保护。提供不同场景下的判断示例（如明确可回答、边界情况、完全不可回答等）。说明该判断在三级决策机制中的作用位置和对整体性能的影响。",
+      "progress_status": "completed",
+      "dependent_files": "backend/app/agent/intent.py,backend/app/agent/prompts.py",
+      "gmt_create": "2026-11-08T13:20:26Z",
+      "gmt_modified": "2026-11-08T13:20:26Z",
+      "parent_id": "c05aa70f-07d8-4bee-867b-3d92fb98b63a",
+      "layer_level": 3,
+      "order": 2,
+      "kk_dependent_files": [
+        "backend/app/agent/intent.py",
+        "backend/app/agent/prompts.py"
+      ]
+    },
+    {
+      "id": "e947bff7-494e-4b16-beea-8836c9913fde",
+      "repo_id": "4f399243-b96c-bb59-b46b-301a2617f505",
+      "name": "防幻觉三重防护",
+      "description": "hallucination-prevention",
+      "prompt": "创建防幻觉三重防护机制的详细文档。深入解释三层防护体系的设计理念和实现细节：第一层 Prompt 约束 - 通过系统提示词限制 LLM 只在知识库范围内回答；第二层 NLI 否定句校验 - 使用自然语言推理技术验证回答与原始文本的一致性；第三层事实指纹验证 - 对比生成答案与知识库条目的语义相似度。说明每种防护机制的技术实现，包括 NLI 模型的选择、相似度阈值设置、指纹提取算法等。解释当检测到幻觉时的处理策略：降级回答、返回未找到信息或触发人工转接。提供防护效果的评估方法和调优参数配置指南。包含实际的 Bad Case 分析和修复案例。",
+      "progress_status": "completed",
+      "dependent_files": "backend/app/agent/prompts.py,backend/app/agent/orchestrator.py,backend/app/agent/memory.py",
+      "gmt_create": "2026-11-08T13:20:26Z",
+      "gmt_modified": "2026-11-08T13:20:26Z",
+      "parent_id": "32015eb7-cc1f-42dd-be9e-cc230b8f119a",
+      "layer_level": 1,
+      "order": 2,
+      "kk_dependent_files": [
+        "backend/app/agent/prompts.py",
+        "backend/app/agent/orchestrator.py",
+        "backend/app/agent/memory.py"
+      ]
+    },
+    {
+      "id": "f7b9c6a3-f249-4e0b-aeed-0261ddaca3c8",
+      "repo_id": "4f399243-b96c-bb59-b46b-301a2617f505",
+      "name": "RRF 融合重排算法",
+      "description": "rrf-fusion-ranking",
+      "prompt": "创建 RRF（Reciprocal Rank Fusion）融合重排算法的详细文档。深入解释 RRF 算法的数学原理：如何通过两个检索结果的排名倒数求和来融合评分，即 RRF(d) = Σ(1/(k + rank_i))，其中 k 通常取值为 60。详细说明无参数融合的优势：不需要复杂的权重调优，能够自然平衡不同检索方法的输出分布。解释如何将 TF-IDF 和 BM25 的独立评分转换为统一的 RRF 融合分数，以及最终的排序逻辑。提供具体的代码示例，展示双路召回结果如何被合并和重排。说明 RRF 算法在不同业务场景下的表现，以及与加权平均等传统融合方法的对比分析。包含性能分析和调优建议。",
+      "progress_status": "completed",
+      "dependent_files": "backend/app/storage/kb.py",
+      "gmt_create": "2026-11-08T13:20:26Z",
+      "gmt_modified": "2026-11-08T13:20:26Z",
+      "parent_id": "93c25cc7-c695-43b2-b04d-efdfa12193e5",
+      "layer_level": 3,
+      "order": 2,
+      "kk_dependent_files": [
+        "backend/app/storage/kb.py"
+      ]
+    },
+    {
+      "id": "f7fd8a4c-039d-47c8-942a-97e5a70ce7bf",
+      "repo_id": "4f399243-b96c-bb59-b46b-301a2617f505",
+      "name": "消息历史管理",
+      "description": "message-history-management",
+      "prompt": "创建消息历史管理的详细文档。深入解释消息的增删改查操作：add_message（插入消息并返回 ID）、get_history（滑动窗口查询，默认 limit=20）、消息角色区分（user/assistant/system）。详细说明滑动窗口机制的设计原理、性能优化策略（按 session_id 索引排序查询）。阐述消息内容的安全过滤、长度限制、特殊字符处理。包含消息时间戳格式、批量操作优化、历史数据清理策略。提供消息存储流程图、查询性能分析和扩容建议。",
+      "progress_status": "completed",
+      "dependent_files": "backend/app/storage/db.py",
+      "gmt_create": "2026-11-08T13:20:26Z",
+      "gmt_modified": "2026-11-08T13:20:26Z",
+      "parent_id": "f830ddcd-2dfa-4f83-a1b8-70c5450ab22e",
+      "layer_level": 3,
+      "order": 2,
+      "kk_dependent_files": [
+        "backend/app/storage/db.py"
+      ]
+    },
+    {
+      "id": "f830ddcd-2dfa-4f83-a1b8-70c5450ab22e",
+      "repo_id": "4f399243-b96c-bb59-b46b-301a2617f505",
+      "name": "会话存储层",
+      "description": "session-storage",
+      "prompt": "创建会话存储层的详细文档。深入解释 SQLite 数据库架构设计，包括 sessions、messages、feedback、handover_queue、faq_drafts、faq_versions、csat 等表结构及其关系。详细说明 WAL 模式优化、线程安全机制、滑动窗口历史管理。阐述会话状态机实现、30 轮对话上限控制、超时复位逻辑。解释 L3 结构化事实提取、L2 增量摘要的记忆系统。包含缓存策略（Top20 高频问题秒回）、运行时控制开关、数据迁移脚本。提供性能监控指标、备份恢复方案和扩容建议。",
+      "progress_status": "completed",
+      "dependent_files": "backend/app/storage/db.py,backend/app/storage/cache.py,backend/app/storage/runtime_control.py",
+      "gmt_create": "2026-11-08T13:20:26Z",
+      "gmt_modified": "2026-11-08T13:20:26Z",
+      "parent_id": "b32529e5-76a4-4aad-b12a-7af6cfe786ee",
+      "layer_level": 2,
+      "order": 2,
+      "kk_dependent_files": [
+        "backend/app/storage/db.py",
+        "backend/app/storage/cache.py",
+        "backend/app/storage/runtime_control.py"
+      ]
+    },
+    {
+      "id": "32015eb7-cc1f-42dd-be9e-cc230b8f119a",
+      "repo_id": "4f399243-b96c-bb59-b46b-301a2617f505",
+      "name": "核心功能",
+      "description": "core-features",
+      "prompt": "创建 smart_bot 核心功能的综合文档。详细介绍智能问答引擎的工作原理，包括 RAG 检索增强生成、TF-IDF + BM25 双路召回、RRF 融合重排算法。解释情绪识别与熔断机制，包括 LEVEL_0~3 情绪分类、关键词兜底策略、自动转人工触发条件。说明防幻觉三重防护：Prompt 约束、NLI 否定句校验、事实指纹验证。描述 Web Widget 的两种形态（悬浮按钮和内嵌面板）、Shadow DOM 样式隔离、Visitor Token 安全机制。包含实际的代码示例和使用场景，展示从用户提问到答案生成的完整流程。",
+      "progress_status": "completed",
+      "dependent_files": "backend/app/agent/orchestrator.py,backend/app/storage/kb.py,backend/app/routers/chat.py,frontend/src/widget.ts",
+      "gmt_create": "2026-11-08T13:20:26Z",
+      "gmt_modified": "2026-11-08T13:20:26Z",
+      "order": 3,
+      "kk_dependent_files": [
+        "backend/app/agent/orchestrator.py",
+        "backend/app/storage/kb.py",
+        "backend/app/routers/chat.py",
+        "frontend/src/widget.ts"
+      ]
+    },
+    {
+      "id": "5f6bf38e-c5e7-4d2e-a204-8389e57b80ed",
+      "repo_id": "4f399243-b96c-bb59-b46b-301a2617f505",
+      "name": "扩展点设计",
+      "description": "extension-points",
+      "prompt": "创建 smart_bot 的扩展点设计文档。详细说明可插拔的 LLM 适配器接口，支持 DeepSeek、Mock 和其他大语言模型提供商的集成方案。解释 KnowledgeBase 抽象层的设计，允许替换为向量数据库或自定义检索实现。阐述情感分析插件机制，支持多种情绪识别算法的接入。说明 Prompt 模板系统和幽默风格配置的可定制性。包含扩展点的代码示例和最佳实践指南。",
+      "progress_status": "completed",
+      "dependent_files": "backend/app/agent/llm.py,backend/app/storage/kb.py,backend/app/agent/emotion.py,backend/app/agent/prompts.py",
+      "gmt_create": "2026-11-08T13:20:26Z",
+      "gmt_modified": "2026-11-08T13:20:26Z",
+      "parent_id": "c3e95eda-d31d-4839-a3f0-1b84e5b5b3de",
+      "layer_level": 1,
+      "order": 3,
+      "kk_dependent_files": [
+        "backend/app/agent/llm.py",
+        "backend/app/storage/kb.py",
+        "backend/app/agent/emotion.py",
+        "backend/app/agent/prompts.py"
+      ]
+    },
+    {
+      "id": "695cd497-eb2a-4c79-9b32-7d66b99a5044",
+      "repo_id": "4f399243-b96c-bb59-b46b-301a2617f505",
+      "name": "知识库管理接口",
+      "description": "kb-admin-api",
+      "prompt": "创建知识库管理接口的详细 API 文档。记录 FAQ 查询端点：GET /api/v1/kb/faqs（支持分类和关键词过滤）、GET /api/v1/kb/faqs/{faq_id}（详情查询）。记录 FAQ 操作端点：POST /api/v1/kb/faqs（新建草稿）、PUT /api/v1/kb/faqs/{faq_id}（编辑草稿）、DELETE /api/v1/kb/faqs/{faq_id}（删除草稿）。记录审批流程端点：GET /api/v1/kb/drafts（草稿列表）、GET /api/v1/kb/drafts/{draft_id}（草稿详情）、POST /api/v1/kb/drafts/{draft_id}/review（提交审核）、POST /api/v1/kb/drafts/{draft_id}/approve（审批通过）、POST /api/v1/kb/drafts/{draft_id}/reject（驳回）。记录版本管理端点：GET /api/v1/kb/versions（版本历史）、POST /api/v1/kb/rollback（版本回滚）。说明 FAQPayload、DraftReviewRequest、RollbackRequest 等请求模型。详细说明草稿状态机（draft → pending → published/rejected）和原子写机制。包含完整的 CRUD 操作示例和审批流程演示。",
+      "progress_status": "completed",
+      "dependent_files": "backend/app/routers/kb_admin.py,backend/app/models/schemas.py",
+      "gmt_create": "2026-11-08T13:20:26Z",
+      "gmt_modified": "2026-11-08T13:20:26Z",
+      "parent_id": "f685ca35-0273-49c0-ad0c-d04c98b9c93d",
+      "layer_level": 1,
+      "order": 3,
+      "kk_dependent_files": [
+        "backend/app/routers/kb_admin.py",
+        "backend/app/models/schemas.py"
+      ]
+    },
+    {
+      "id": "7a9494f3-88a0-4f0d-a367-1a5d185d3526",
+      "repo_id": "4f399243-b96c-bb59-b46b-301a2617f505",
+      "name": "防幻觉三重防护机制",
+      "description": "hallucination-prevention",
+      "prompt": "创建防幻觉三重防护机制的详细文档。深入解释三层防护架构：第一层 Prompt 约束（系统提示词中的事实性要求）、第二层 NLI 否定句语义校验（避免语义相反的误答）、第三层事实指纹验证（回答中的数字/金额/时间必须在检索上下文中有依据）。详细说明 verify_facts 函数的工作原理，如何通过 extract_key_facts 提取关键事实并进行集合包含判断。解释 NLI 校验在否定句场景下的特殊处理逻辑，CONTRADICTION 直接转人工，NEUTRAL 走软转人工。包含实际的代码示例，展示不同幻觉场景下的检测和拦截流程。说明与情绪识别和高风险 FAQ 的联动机制。",
+      "progress_status": "completed",
+      "dependent_files": "backend/app/agent/orchestrator.py,backend/app/agent/humor.py",
+      "gmt_create": "2026-11-08T13:20:26Z",
+      "gmt_modified": "2026-11-08T13:20:26Z",
+      "parent_id": "4ab81fdc-4548-4c9e-b3d4-bc72667cd09b",
+      "layer_level": 2,
+      "order": 3,
+      "kk_dependent_files": [
+        "backend/app/agent/orchestrator.py",
+        "backend/app/agent/humor.py"
+      ]
+    },
+    {
+      "id": "87332503-7139-4851-8fd4-e9541c1d0272",
+      "repo_id": "4f399243-b96c-bb59-b46b-301a2617f505",
+      "name": "NLI 蕴含校验",
+      "description": "nli-verification",
+      "prompt": "创建 NLI（Natural Language Inference）蕴含校验的详细文档。深入解释如何判断用户查询与 FAQ 答案之间的语义关系，包括 ENTAILMENT（蕴含）、CONTRADICTION（矛盾）、NEUTRAL（中立）三种分类的判断逻辑。详细说明否定句的特殊处理机制，如何通过 NLI 检测用户查询中包含的否定含义并避免错误匹配。描述 NLI 模型的集成方式、输入构造和结果解析。提供具体的校验示例，展示不同类型语义关系的判断结果。说明 NLI 校验在防幻觉机制中的作用和对回答质量的提升效果。",
+      "progress_status": "completed",
+      "dependent_files": "backend/app/agent/intent.py",
+      "gmt_create": "2026-11-08T13:20:26Z",
+      "gmt_modified": "2026-11-08T13:20:26Z",
+      "parent_id": "c05aa70f-07d8-4bee-867b-3d92fb98b63a",
+      "layer_level": 3,
+      "order": 3,
+      "kk_dependent_files": [
+        "backend/app/agent/intent.py"
+      ]
+    },
+    {
+      "id": "899cd48a-9823-4006-b4b4-cc59647406b2",
+      "repo_id": "4f399243-b96c-bb59-b46b-301a2617f505",
+      "name": "中文分词与特征工程",
+      "description": "tokenization-chinese",
+      "prompt": "创建中文分词与特征工程的详细文档。深入解释 tokenize 函数基于 jieba 的分词实现，包括停用词表 _STOPWORDS 的设计原则和过滤策略。详细说明 tokenize_full 函数的混合特征设计，包括 jieba 词级特征和 bigram 字符级特征的融合机制。阐述 bigram_weight=0.7 参数对口语化变体匹配的提升效果，以及答案降权 bigram_weight=0.2 的设计考量。包含分词效果示例、性能分析和自定义分词规则的配置方法。",
+      "progress_status": "completed",
+      "dependent_files": "backend/app/storage/kb.py",
+      "gmt_create": "2026-11-08T13:20:26Z",
+      "gmt_modified": "2026-11-08T13:20:26Z",
+      "parent_id": "a2bafc7e-dcd2-4bd4-add3-5730312c0f37",
+      "layer_level": 3,
+      "order": 3,
+      "kk_dependent_files": [
+        "backend/app/storage/kb.py"
+      ]
+    },
+    {
+      "id": "8a065dc4-7641-40a2-9bd3-f4b95ec20ed3",
+      "repo_id": "4f399243-b96c-bb59-b46b-301a2617f505",
+      "name": "Web 聊天组件",
+      "description": "web-widget-component",
+      "prompt": "创建 Web 聊天组件的详细文档。深入解释 Web Component 架构设计，包括 Shadow DOM 样式隔离、自定义元素生命周期、属性监听机制。详细说明两种形态（inline 内嵌面板、floating 悬浮按钮）的实现差异和切换逻辑。阐述 SSE 流式响应处理、WebSocket 实时连接管理、消息渲染和状态同步。解释 Visitor Token 安全机制、OTP 验证码流程、CSAT 满意度评分、免责声明展示。包含组件 API 接口、事件系统、样式定制选项、跨浏览器兼容性方案。提供集成示例、性能优化技巧和故障排查指南。",
+      "progress_status": "completed",
+      "dependent_files": "frontend/src/widget.ts,frontend/src/site.ts,frontend/src/sse-client.ts,frontend/src/api.ts",
+      "gmt_create": "2026-11-08T13:20:26Z",
+      "gmt_modified": "2026-11-08T13:20:26Z",
+      "parent_id": "b32529e5-76a4-4aad-b12a-7af6cfe786ee",
+      "layer_level": 2,
+      "order": 3,
+      "kk_dependent_files": [
+        "frontend/src/widget.ts",
+        "frontend/src/site.ts",
+        "frontend/src/sse-client.ts",
+        "frontend/src/api.ts"
+      ]
+    },
+    {
+      "id": "bcd43a46-efe5-43b2-9db0-f55e330c1eb7",
+      "repo_id": "4f399243-b96c-bb59-b46b-301a2617f505",
+      "name": "索引构建流水线",
+      "description": "index-construction-pipeline",
+      "prompt": "创建知识库索引构建流水线的详细文档。深入解释从 FAQ JSON 数据到可搜索索引的完整构建过程，包括数据清洗、分词预处理、特征提取、索引存储等各个阶段。详细说明 build_kb.py 脚本的功能：如何读取 faq.json 文件，进行数据验证和质量检查，生成预计算的索引文件。解释索引文件的存储格式和数据结构设计，包括倒排索引、文档频率表、词汇表等关键组件。描述增量更新机制：当 FAQ 数据发生变化时，如何高效地重建或更新索引而无需全量重建。提供具体的使用示例，展示如何运行构建脚本、监控构建进度和处理异常情况。说明大规模知识库的性能优化策略，包括内存管理、磁盘 I/O 优化和并行化处理。",
+      "progress_status": "completed",
+      "dependent_files": "knowledge_base/build_kb.py,backend/app/storage/kb.py",
+      "gmt_create": "2026-11-08T13:20:26Z",
+      "gmt_modified": "2026-11-08T13:20:26Z",
+      "parent_id": "93c25cc7-c695-43b2-b04d-efdfa12193e5",
+      "layer_level": 3,
+      "order": 3,
+      "kk_dependent_files": [
+        "knowledge_base/build_kb.py",
+        "backend/app/storage/kb.py"
+      ]
+    },
+    {
+      "id": "c7a197d3-7187-4640-a08b-5d88b361f75c",
+      "repo_id": "4f399243-b96c-bb59-b46b-301a2617f505",
+      "name": "答案缓存系统",
+      "description": "answer-cache-system",
+      "prompt": "创建答案缓存系统的详细文档。深入解释 Top20 高频问题秒回缓存的实现原理：AnswerCache 类设计、LRU 淘汰策略（基于命中次数和时间戳）。详细说明查询规范化流程（normalize_query）：jieba 分词、停用词过滤、标点去除、中文英文数字 token 提取。阐述缓存键生成算法、版本号同步机制（kb_version）、缓存失效策略（知识库重建时清空）。包含缓存命中率统计、内存占用控制、并发安全保证。提供缓存架构图、性能对比数据和监控指标说明。",
+      "progress_status": "completed",
+      "dependent_files": "backend/app/storage/cache.py",
+      "gmt_create": "2026-11-08T13:20:26Z",
+      "gmt_modified": "2026-11-08T13:20:26Z",
+      "parent_id": "f830ddcd-2dfa-4f83-a1b8-70c5450ab22e",
+      "layer_level": 3,
+      "order": 3,
+      "kk_dependent_files": [
+        "backend/app/storage/cache.py"
+      ]
+    },
+    {
+      "id": "db35c556-a894-47a8-aad3-7ef14d992649",
+      "repo_id": "4f399243-b96c-bb59-b46b-301a2617f505",
+      "name": "Web Widget 聊天组件",
+      "description": "web-widget-component",
+      "prompt": "创建 Web Widget 聊天组件的综合文档。详细介绍 Web Component 架构设计和 Shadow DOM 样式隔离机制，确保组件在任意网站环境中都能正常显示。说明两种形态的实现：悬浮按钮形态（floating button）和内嵌面板形态（inline panel），包括 CSS 样式配置、位置定位算法和动画效果。解释 Visitor Token 安全机制，包括令牌生成、签名验证和会话绑定。描述 SSE 客户端实现，包括连接建立、消息接收、断线重连和错误处理。提供集成示例，展示如何在不同网站中嵌入聊天组件，包括 React、Vue、原生 HTML 等多种环境。说明自定义主题、品牌色配置和多语言支持。包含性能优化建议和常见问题的解决方案。",
+      "progress_status": "completed",
+      "dependent_files": "frontend/src/widget.ts,frontend/src/site.ts,frontend/src/sse-client.ts",
+      "gmt_create": "2026-11-08T13:20:26Z",
+      "gmt_modified": "2026-11-08T13:20:26Z",
+      "parent_id": "32015eb7-cc1f-42dd-be9e-cc230b8f119a",
+      "layer_level": 1,
+      "order": 3,
+      "kk_dependent_files": [
+        "frontend/src/widget.ts",
+        "frontend/src/site.ts",
+        "frontend/src/sse-client.ts"
+      ]
+    },
+    {
+      "id": "6b73ac12-ffb7-4c1e-ad03-58388cd2ce87",
+      "repo_id": "4f399243-b96c-bb59-b46b-301a2617f505",
+      "name": "OTP 验证码接口",
+      "description": "otp-api",
+      "prompt": "创建 OTP 验证码接口的详细 API 文档。记录验证码发送端点 POST /api/v1/otp/send，说明手机号验证、Visitor Token 校验、验证码生成和存储机制。记录验证码校验端点 POST /api/v1/otp/verify，说明验证码比对、过期时间检查、安全状态标记逻辑。详细说明 OtpSendRequest 和 OtpVerifyRequest 的请求模型字段。解释 Mock 模式（OTP_MOCK_MODE=true）和生产模式的差异，Mock 模式下直接返回验证码用于开发联调。说明会话临时安全状态 otp_verified 的 TTL 机制和安全性考虑。包含完整的验证码发送、校验、状态管理的请求/响应示例。记录错误处理：无效 Token、会话不存在、验证码过期、手机号不匹配等情况。",
+      "progress_status": "completed",
+      "dependent_files": "backend/app/routers/otp.py,backend/app/models/schemas.py",
+      "gmt_create": "2026-11-08T13:20:26Z",
+      "gmt_modified": "2026-11-08T13:20:26Z",
+      "parent_id": "f685ca35-0273-49c0-ad0c-d04c98b9c93d",
+      "layer_level": 1,
+      "order": 4,
+      "kk_dependent_files": [
+        "backend/app/routers/otp.py",
+        "backend/app/models/schemas.py"
+      ]
+    },
+    {
+      "id": "8a5da1ec-08c0-4434-a491-5db78dffd0b2",
+      "repo_id": "4f399243-b96c-bb59-b46b-301a2617f505",
+      "name": "运行时控制开关",
+      "description": "runtime-control-switches",
+      "prompt": "创建运行时控制开关的详细文档。深入解释 Kill Switch 三种服务模式：auto（正常 RAG 模式）、handover（全局转人工模式）、off（维护下线模式）。详细说明灰度发布机制：gray_percent 百分比分流、session_id 稳定哈希算法、同一会话一致性保证。阐述运行状态的实时监控、日志记录、状态快照获取。包含模式切换的安全性考虑、多实例扩展方案（Redis 共享）、故障恢复策略。提供模式切换流程图、灰度流量分布图和运维操作指南。",
+      "progress_status": "completed",
+      "dependent_files": "backend/app/storage/runtime_control.py",
+      "gmt_create": "2026-11-08T13:20:26Z",
+      "gmt_modified": "2026-11-08T13:20:26Z",
+      "parent_id": "f830ddcd-2dfa-4f83-a1b8-70c5450ab22e",
+      "layer_level": 3,
+      "order": 4,
+      "kk_dependent_files": [
+        "backend/app/storage/runtime_control.py"
+      ]
+    },
+    {
+      "id": "c325ccfa-b4cf-43aa-8fd8-b3f03e45619a",
+      "repo_id": "4f399243-b96c-bb59-b46b-301a2617f505",
+      "name": "FAQ 数据模型与索引构建",
+      "description": "faq-data-model",
+      "prompt": "创建 FAQ 数据模型与索引构建的详细文档。深入解释 FAQItem dataclass 的字段设计，包括 id、category、standard_question、variants、answer、risk_level、follow_up 等业务语义。详细说明 search_text 属性的文本组合策略和 tokenized 方法的特征分离机制。阐述 KnowledgeBase.load 方法的 JSON 文件解析流程，以及 faqs 列表到 TfidfIndex 的转换过程。包含 category_zh 分类映射、version 缓存失效机制、重复检测 find_duplicates 的实现原理。提供 FAQ 数据规范、最佳实践和迁移指南。",
+      "progress_status": "completed",
+      "dependent_files": "backend/app/storage/kb.py,knowledge_base/faq.json",
+      "gmt_create": "2026-11-08T13:20:26Z",
+      "gmt_modified": "2026-11-08T13:20:26Z",
+      "parent_id": "a2bafc7e-dcd2-4bd4-add3-5730312c0f37",
+      "layer_level": 3,
+      "order": 4,
+      "kk_dependent_files": [
+        "backend/app/storage/kb.py",
+        "knowledge_base/faq.json"
+      ]
+    },
+    {
+      "id": "cc8ae97b-ecb0-4620-8310-1bd03c377f61",
+      "repo_id": "4f399243-b96c-bb59-b46b-301a2617f505",
+      "name": "转人工调度系统",
+      "description": "manual-handover-system",
+      "prompt": "创建转人工调度系统的详细文档。深入解释软转人工和硬转人工两种模式的区别和应用场景：软转人工用于用户主动要求或情绪升级时的澄清挽留流程，硬转人工用于高风险问题或系统熔断时的强制转接。描述转人工触发条件的配置方法，包括情绪阈值、关键词匹配、业务规则等。说明排队进度跟踪机制，包括队列管理、优先级排序、等待时间预估和实时状态更新。解释坐席工作台的设计，包括待办事项列表、会话上下文注入、快捷回复模板和历史记录查看。描述 WebSocket 实时通信协议，用于推送新的转人工请求和状态变更通知。提供调度策略的调优指南和监控指标定义。包含完整的业务流程图和异常处理方案。",
+      "progress_status": "completed",
+      "dependent_files": "backend/app/agent/orchestrator.py,backend/app/routers/session.py,backend/app/routers/ws.py",
+      "gmt_create": "2026-11-08T13:20:26Z",
+      "gmt_modified": "2026-11-08T13:20:26Z",
+      "parent_id": "32015eb7-cc1f-42dd-be9e-cc230b8f119a",
+      "layer_level": 1,
+      "order": 4,
+      "kk_dependent_files": [
+        "backend/app/agent/orchestrator.py",
+        "backend/app/routers/session.py",
+        "backend/app/routers/ws.py"
+      ]
+    },
+    {
+      "id": "f685ca35-0273-49c0-ad0c-d04c98b9c93d",
+      "repo_id": "4f399243-b96c-bb59-b46b-301a2617f505",
+      "name": "API 接口文档",
+      "description": "api-reference",
+      "prompt": "创建完整的 API 接口参考文档。详细记录所有 RESTful API 端点，包括 HTTP 方法、URL 模式、请求参数、响应格式和错误码。重点文档化流式对话接口（POST /api/v1/chat/stream）的 SSE 协议规范，包括事件类型、消息格式、连接管理等。记录 WebSocket 实时通信接口，包括连接建立、消息订阅、事件广播等机制。包含认证和授权机制，如 Visitor Token 签名验证、IP 限流策略。提供完整的请求/响应示例，涵盖正常流程和异常处理。说明 API 版本管理、向后兼容性和迁移指南。包含客户端集成示例和最佳实践。",
+      "progress_status": "completed",
+      "dependent_files": "backend/app/routers/chat.py,backend/app/routers/session.py,backend/app/routers/ws.py,backend/app/routers/ops.py,backend/app/routers/kb_admin.py,backend/app/routers/otp.py",
+      "gmt_create": "2026-11-08T13:20:26Z",
+      "gmt_modified": "2026-11-08T13:20:26Z",
+      "order": 4,
+      "kk_dependent_files": [
+        "backend/app/routers/chat.py",
+        "backend/app/routers/session.py",
+        "backend/app/routers/ws.py",
+        "backend/app/routers/ops.py",
+        "backend/app/routers/kb_admin.py",
+        "backend/app/routers/otp.py"
+      ]
+    },
+    {
+      "id": "6110ca7b-42b6-4c62-ad50-c6af5f3cc2b5",
+      "repo_id": "4f399243-b96c-bb59-b46b-301a2617f505",
+      "name": "数据模型",
+      "description": "data-models",
+      "prompt": "创建全面的数据模型文档。详细描述核心实体关系和字段定义，包括 FAQItem（知识库条目）、Session（对话会话）、Message（对话消息）、HandoverQueue（人工转接队列）等关键数据结构。解释 SQLite 数据库的表结构设计，包括主外键关系、索引优化、约束规则。说明 FAQ 数据的 JSON 格式规范，包括标准问法、变体、答案、风险等级等字段的语义和验证规则。描述数据生命周期管理，包括会话的滑动窗口机制、L3 结构化事实提取、增量摘要更新等。包含数据迁移策略、版本管理和备份恢复方案。提供数据访问模式和缓存策略的最佳实践。",
+      "progress_status": "completed",
+      "dependent_files": "backend/app/models/schemas.py,backend/app/storage/db.py,knowledge_base/faq.json",
+      "gmt_create": "2026-11-08T13:20:26Z",
+      "gmt_modified": "2026-11-08T13:20:26Z",
+      "order": 5,
+      "kk_dependent_files": [
+        "backend/app/models/schemas.py",
+        "backend/app/storage/db.py",
+        "knowledge_base/faq.json"
+      ]
+    },
+    {
+      "id": "91ecaaf3-2682-4b92-9a95-785f90b069be",
+      "repo_id": "4f399243-b96c-bb59-b46b-301a2617f505",
+      "name": "WebSocket 实时通信",
+      "description": "websocket-api",
+      "prompt": "创建 WebSocket 实时通信接口的详细 API 文档。记录用户端连接 ws://host/ws/user?session_id=&visitor_token=，说明连接建立时的 Visitor Token 认证机制和连接生命周期管理。记录坐席端连接 ws://host/ws/agent?token=，说明 AGENT_WS_TOKEN 认证和连接权限控制。详细说明事件协议：用户端事件（queue 排队进度、agent_joined 人工接入通知）和坐席端事件（handovers 待办快照、handover_new 新转人工、handover_done 工单完成）。解释 ConnectionManager 的连接管理机制，包括用户连接池、坐席连接池、消息推送和广播逻辑。说明降级策略：WebSocket 失败时前端自动回退 HTTP 轮询。包含连接建立、事件订阅、消息推送的完整交互示例。记录连接断开处理和重连机制。",
+      "progress_status": "completed",
+      "dependent_files": "backend/app/routers/ws.py",
+      "gmt_create": "2026-11-08T13:20:26Z",
+      "gmt_modified": "2026-11-08T13:20:26Z",
+      "parent_id": "f685ca35-0273-49c0-ad0c-d04c98b9c93d",
+      "layer_level": 1,
+      "order": 5,
+      "kk_dependent_files": [
+        "backend/app/routers/ws.py"
+      ]
+    },
+    {
+      "id": "f1f7c87d-2401-4dc4-b533-0885e9d5f4c6",
+      "repo_id": "4f399243-b96c-bb59-b46b-301a2617f505",
+      "name": "辅助检测功能",
+      "description": "auxiliary-detection",
+      "prompt": "创建辅助检测功能的详细文档。深入解释否定词检测 has_negation 的正则表达式模式设计，包括「不支持」「不能」「没(有|法|办)」等语法规则。详细说明风险关键词 has_risk_keyword 的分类体系，涵盖投诉举报、法律维权、账号安全等高风险场景。阐述转人工意图检测 wants_human 的关键词匹配策略，以及确认/拒绝判断 is_confirmation/is_denial 的精确匹配逻辑。包含正则表达式优化建议、关键词库维护规范和误判率分析方法。",
+      "progress_status": "completed",
+      "dependent_files": "backend/app/storage/kb.py",
+      "gmt_create": "2026-11-08T13:20:26Z",
+      "gmt_modified": "2026-11-08T13:20:26Z",
+      "parent_id": "a2bafc7e-dcd2-4bd4-add3-5730312c0f37",
+      "layer_level": 3,
+      "order": 5,
+      "kk_dependent_files": [
+        "backend/app/storage/kb.py"
+      ]
+    },
+    {
+      "id": "6e21baf3-fa50-430a-83be-6a3933f06f91",
+      "repo_id": "4f399243-b96c-bb59-b46b-301a2617f505",
+      "name": "部署与运维",
+      "description": "deployment-operations",
+      "prompt": "创建部署与运维指南文档。详细说明生产环境的部署步骤，包括 Docker 容器化配置、Nginx 反向代理设置、SSL 证书配置等。解释自动化巡检系统的实现，包括健康检查脚本、CronJob 定时任务、监控告警机制。描述日志收集、错误追踪、性能监控的配置方法。包含容量规划建议、负载均衡配置、数据库备份策略等运维最佳实践。提供故障排查指南，涵盖常见问题诊断、性能瓶颈分析、内存泄漏检测等。说明 CI/CD 流水线的配置和自动化测试的执行流程。包含灾难恢复计划和业务连续性保障方案。",
+      "progress_status": "completed",
+      "dependent_files": "docker-compose.yml,scripts/healthcheck.py,scripts/install-cron.sh,.github/workflows/ci.yml",
+      "gmt_create": "2026-11-08T13:20:26Z",
+      "gmt_modified": "2026-11-08T13:20:26Z",
+      "order": 6,
+      "kk_dependent_files": [
+        "docker-compose.yml",
+        "scripts/healthcheck.py",
+        "scripts/install-cron.sh",
+        ".github/workflows/ci.yml"
+      ]
+    },
+    {
+      "id": "328d423a-c10d-4c4a-837d-b9528c43f701",
+      "repo_id": "4f399243-b96c-bb59-b46b-301a2617f505",
+      "name": "测试与质量保障",
+      "description": "testing-quality",
+      "prompt": "创建测试与质量保障文档。详细介绍单元测试、集成测试和负载测试的编写和执行方法。解释黄金数据集评估框架，包括测试用例设计、评估指标定义、自动化评分机制。说明 Bad Case 归因分析工具的使用方法，包括错误案例收集、根因分析、改进跟踪等流程。描述重复检测工具的用法，帮助维护知识库质量。包含测试覆盖率要求、代码质量检查、静态分析配置等开发规范。提供性能基准测试结果和优化建议。说明回归测试策略和质量门禁的设置方法。",
+      "progress_status": "completed",
+      "dependent_files": "backend/tests/test_api.py,backend/tests/eval.py,backend/tests/load_test.py,backend/tests/golden_dataset.json,backend/tools/badcase_report.py,backend/tools/check_duplicates.py",
+      "gmt_create": "2026-11-08T13:20:26Z",
+      "gmt_modified": "2026-11-08T13:20:26Z",
+      "order": 7,
+      "kk_dependent_files": [
+        "backend/tests/test_api.py",
+        "backend/tests/eval.py",
+        "backend/tests/load_test.py",
+        "backend/tests/golden_dataset.json",
+        "backend/tools/badcase_report.py",
+        "backend/tools/check_duplicates.py"
+      ]
+    },
+    {
+      "id": "dbbee914-4f2b-457c-a176-97aa114b6824",
+      "repo_id": "4f399243-b96c-bb59-b46b-301a2617f505",
+      "name": "开发者指南",
+      "description": "development-guide",
+      "prompt": "创建开发者指南文档。详细说明代码规范和最佳实践，包括 Python 编码规范、TypeScript 开发约定、文件组织结构等。解释新功能的开发流程，从需求分析到代码提交的标准步骤。描述调试技巧和故障排查方法，包括日志分析、断点调试、性能分析等工具的使用。说明 Git 工作流和分支管理策略，包括代码审查、合并请求、版本发布等流程。包含贡献指南，说明如何参与开源项目、提交 Issue、发起 PR 等协作方式。提供常用开发命令、IDE 配置建议、插件推荐等开发环境优化技巧。",
+      "progress_status": "completed",
+      "dependent_files": "backend/app/agent/prompts.py,frontend/src/styles.css,backend/tests/conftest.py,.gitignore",
+      "gmt_create": "2026-11-08T13:20:26Z",
+      "gmt_modified": "2026-11-08T13:20:26Z",
+      "order": 8,
+      "kk_dependent_files": [
+        "backend/app/agent/prompts.py",
+        "frontend/src/styles.css",
+        "backend/tests/conftest.py",
+        ".gitignore"
+      ]
+    }
+  ],
+  "wiki_items": [
+    {
+      "id": "2477fb36-1b73-46d5-8b82-ada117d75cca",
+      "catalog_id": "2477fb36-1b73-46d5-8b82-ada117d75cca",
+      "title": "TF-IDF 向量索引",
+      "description": "tfidf-index",
+      "extend": "{}",
+      "progress_status": "completed",
+      "repo_id": "4f399243-b96c-bb59-b46b-301a2617f505",
+      "reference_count": 0,
+      "gmt_create": "2026-11-08T13:20:26Z",
+      "gmt_modified": "2026-11-08T13:20:26Z"
+    },
+    {
+      "id": "41da046e-fe85-4ad7-a6a5-ddaafe61cc54",
+      "catalog_id": "41da046e-fe85-4ad7-a6a5-ddaafe61cc54",
+      "title": "TF-IDF 与 BM25 双路召回",
+      "description": "tfidf-bm25-retrieval",
+      "extend": "{}",
+      "progress_status": "completed",
+      "repo_id": "4f399243-b96c-bb59-b46b-301a2617f505",
+      "reference_count": 0,
+      "gmt_create": "2026-11-08T13:20:26Z",
+      "gmt_modified": "2026-11-08T13:20:26Z"
+    },
+    {
+      "id": "41f26915-4cba-47ef-8e10-0f4734cab616",
+      "catalog_id": "41f26915-4cba-47ef-8e10-0f4734cab616",
+      "title": "SQLite 数据库架构",
+      "description": "sqlite-schema",
+      "extend": "{}",
+      "progress_status": "completed",
+      "repo_id": "4f399243-b96c-bb59-b46b-301a2617f505",
+      "reference_count": 0,
+      "gmt_create": "2026-11-08T13:20:26Z",
+      "gmt_modified": "2026-11-08T13:20:26Z"
+    },
+    {
+      "id": "4ab81fdc-4548-4c9e-b3d4-bc72667cd09b",
+      "catalog_id": "4ab81fdc-4548-4c9e-b3d4-bc72667cd09b",
+      "title": "RAG 智能问答引擎",
+      "description": "rag-qa-engine",
+      "extend": "{}",
+      "progress_status": "completed",
+      "repo_id": "4f399243-b96c-bb59-b46b-301a2617f505",
+      "reference_count": 0,
+      "gmt_create": "2026-11-08T13:20:26Z",
+      "gmt_modified": "2026-11-08T13:20:26Z"
+    },
+    {
+      "id": "52371a91-41e7-4da6-9006-180fce9dfbdc",
+      "catalog_id": "52371a91-41e7-4da6-9006-180fce9dfbdc",
+      "title": "Query Rewrite 查询改写",
+      "description": "query-rewrite",
+      "extend": "{}",
+      "progress_status": "completed",
+      "repo_id": "4f399243-b96c-bb59-b46b-301a2617f505",
+      "reference_count": 0,
+      "gmt_create": "2026-11-08T13:20:26Z",
+      "gmt_modified": "2026-11-08T13:20:26Z"
+    },
+    {
+      "id": "bd509be3-126c-4e0b-9111-a2ab60380b86",
+      "catalog_id": "bd509be3-126c-4e0b-9111-a2ab60380b86",
+      "title": "项目概述",
+      "description": "project-overview",
+      "extend": "{}",
+      "progress_status": "completed",
+      "repo_id": "4f399243-b96c-bb59-b46b-301a2617f505",
+      "reference_count": 0,
+      "gmt_create": "2026-11-08T13:20:26Z",
+      "gmt_modified": "2026-11-08T13:20:26Z"
+    },
+    {
+      "id": "d2c493ba-d6ff-41dd-b79c-324b08fdeaf2",
+      "catalog_id": "d2c493ba-d6ff-41dd-b79c-324b08fdeaf2",
+      "title": "Orchestrator 编排器",
+      "description": "orchestrator",
+      "extend": "{}",
+      "progress_status": "completed",
+      "repo_id": "4f399243-b96c-bb59-b46b-301a2617f505",
+      "reference_count": 0,
+      "gmt_create": "2026-11-08T13:20:26Z",
+      "gmt_modified": "2026-11-08T13:20:26Z"
+    },
+    {
+      "id": "de9aa403-9b5e-4a14-8e7f-5a40ff55aeb0",
+      "catalog_id": "de9aa403-9b5e-4a14-8e7f-5a40ff55aeb0",
+      "title": "架构总览",
+      "description": "architecture-overview",
+      "extend": "{}",
+      "progress_status": "completed",
+      "repo_id": "4f399243-b96c-bb59-b46b-301a2617f505",
+      "reference_count": 0,
+      "gmt_create": "2026-11-08T13:20:26Z",
+      "gmt_modified": "2026-11-08T13:20:26Z"
+    },
+    {
+      "id": "e1cd05e8-6764-413b-be08-e7fc3a0b25dd",
+      "catalog_id": "e1cd05e8-6764-413b-be08-e7fc3a0b25dd",
+      "title": "Orchestrator 编排器主流程",
+      "description": "orchestrator-pipeline",
+      "extend": "{}",
+      "progress_status": "completed",
+      "repo_id": "4f399243-b96c-bb59-b46b-301a2617f505",
+      "reference_count": 0,
+      "gmt_create": "2026-11-08T13:20:26Z",
+      "gmt_modified": "2026-11-08T13:20:26Z"
+    },
+    {
+      "id": "f2a253e9-3100-4b6a-a682-d443ae1b34ec",
+      "catalog_id": "f2a253e9-3100-4b6a-a682-d443ae1b34ec",
+      "title": "聊天接口",
+      "description": "chat-api",
+      "extend": "{}",
+      "progress_status": "completed",
+      "repo_id": "4f399243-b96c-bb59-b46b-301a2617f505",
+      "reference_count": 0,
+      "gmt_create": "2026-11-08T13:20:26Z",
+      "gmt_modified": "2026-11-08T13:20:26Z"
+    },
+    {
+      "id": "0c1f1d7b-5d08-4936-b649-54cc56199823",
+      "catalog_id": "0c1f1d7b-5d08-4936-b649-54cc56199823",
+      "title": "BM25 关键词检索",
+      "description": "bm25-retrieval",
+      "extend": "{}",
+      "progress_status": "completed",
+      "repo_id": "4f399243-b96c-bb59-b46b-301a2617f505",
+      "reference_count": 0,
+      "gmt_create": "2026-11-08T13:20:26Z",
+      "gmt_modified": "2026-11-08T13:20:26Z"
+    },
+    {
+      "id": "14542221-8bf7-4d92-b96f-e4193a0ad004",
+      "catalog_id": "14542221-8bf7-4d92-b96f-e4193a0ad004",
+      "title": "中文分词与特征工程",
+      "description": "chinese-tokenization",
+      "extend": "{}",
+      "progress_status": "completed",
+      "repo_id": "4f399243-b96c-bb59-b46b-301a2617f505",
+      "reference_count": 0,
+      "gmt_create": "2026-11-08T13:20:26Z",
+      "gmt_modified": "2026-11-08T13:20:26Z"
+    },
+    {
+      "id": "2067b70a-53e6-4854-ade2-32cb7481f3c7",
+      "catalog_id": "2067b70a-53e6-4854-ade2-32cb7481f3c7",
+      "title": "情绪识别与熔断机制",
+      "description": "emotion-control",
+      "extend": "{}",
+      "progress_status": "completed",
+      "repo_id": "4f399243-b96c-bb59-b46b-301a2617f505",
+      "reference_count": 0,
+      "gmt_create": "2026-11-08T13:20:26Z",
+      "gmt_modified": "2026-11-08T13:20:26Z"
+    },
+    {
+      "id": "275b72a6-d1c2-47f4-a6b0-3dd97eaff9b5",
+      "catalog_id": "275b72a6-d1c2-47f4-a6b0-3dd97eaff9b5",
+      "title": "会话管理接口",
+      "description": "session-api",
+      "extend": "{}",
+      "progress_status": "completed",
+      "repo_id": "4f399243-b96c-bb59-b46b-301a2617f505",
+      "reference_count": 0,
+      "gmt_create": "2026-11-08T13:20:26Z",
+      "gmt_modified": "2026-11-08T13:20:26Z"
+    },
+    {
+      "id": "4002de2f-3fb6-43b7-be43-904c63b8320d",
+      "catalog_id": "4002de2f-3fb6-43b7-be43-904c63b8320d",
+      "title": "会话状态机与生命周期",
+      "description": "session-state-machine",
+      "extend": "{}",
+      "progress_status": "completed",
+      "repo_id": "4f399243-b96c-bb59-b46b-301a2617f505",
+      "reference_count": 0,
+      "gmt_create": "2026-11-08T13:20:26Z",
+      "gmt_modified": "2026-11-08T13:20:26Z"
+    },
+    {
+      "id": "93c25cc7-c695-43b2-b04d-efdfa12193e5",
+      "catalog_id": "93c25cc7-c695-43b2-b04d-efdfa12193e5",
+      "title": "知识库检索引擎",
+      "description": "knowledge-retrieval",
+      "extend": "{}",
+      "progress_status": "completed",
+      "repo_id": "4f399243-b96c-bb59-b46b-301a2617f505",
+      "reference_count": 0,
+      "gmt_create": "2026-11-08T13:20:26Z",
+      "gmt_modified": "2026-11-08T13:20:26Z"
+    },
+    {
+      "id": "a2bafc7e-dcd2-4bd4-add3-5730312c0f37",
+      "catalog_id": "a2bafc7e-dcd2-4bd4-add3-5730312c0f37",
+      "title": "知识库检索引擎",
+      "description": "knowledge-base-engine",
+      "extend": "{}",
+      "progress_status": "completed",
+      "repo_id": "4f399243-b96c-bb59-b46b-301a2617f505",
+      "reference_count": 0,
+      "gmt_create": "2026-11-08T13:20:26Z",
+      "gmt_modified": "2026-11-08T13:20:26Z"
+    },
+    {
+      "id": "b32529e5-76a4-4aad-b12a-7af6cfe786ee",
+      "catalog_id": "b32529e5-76a4-4aad-b12a-7af6cfe786ee",
+      "title": "核心组件",
+      "description": "core-components",
+      "extend": "{}",
+      "progress_status": "completed",
+      "repo_id": "4f399243-b96c-bb59-b46b-301a2617f505",
+      "reference_count": 0,
+      "gmt_create": "2026-11-08T13:20:26Z",
+      "gmt_modified": "2026-11-08T13:20:26Z"
+    },
+    {
+      "id": "bce35292-a987-4bda-9501-7a206b2ed685",
+      "catalog_id": "bce35292-a987-4bda-9501-7a206b2ed685",
+      "title": "快速开始",
+      "description": "getting-started",
+      "extend": "{}",
+      "progress_status": "completed",
+      "repo_id": "4f399243-b96c-bb59-b46b-301a2617f505",
+      "reference_count": 0,
+      "gmt_create": "2026-11-08T13:20:26Z",
+      "gmt_modified": "2026-11-08T13:20:26Z"
+    },
+    {
+      "id": "f95f1405-347d-4dd7-87bd-313439fcf8c6",
+      "catalog_id": "f95f1405-347d-4dd7-87bd-313439fcf8c6",
+      "title": "相似度决策机制",
+      "description": "similarity-decision",
+      "extend": "{}",
+      "progress_status": "completed",
+      "repo_id": "4f399243-b96c-bb59-b46b-301a2617f505",
+      "reference_count": 0,
+      "gmt_create": "2026-11-08T13:20:26Z",
+      "gmt_modified": "2026-11-08T13:20:26Z"
+    },
+    {
+      "id": "00cc32fe-892c-4ecf-b754-becb8381d39d",
+      "catalog_id": "00cc32fe-892c-4ecf-b754-becb8381d39d",
+      "title": "数据流设计",
+      "description": "data-flow",
+      "extend": "{}",
+      "progress_status": "completed",
+      "repo_id": "4f399243-b96c-bb59-b46b-301a2617f505",
+      "reference_count": 0,
+      "gmt_create": "2026-11-08T13:20:26Z",
+      "gmt_modified": "2026-11-08T13:20:26Z"
+    },
+    {
+      "id": "5032d6bf-daaf-4d2a-8d26-9d074ef9a6f7",
+      "catalog_id": "5032d6bf-daaf-4d2a-8d26-9d074ef9a6f7",
+      "title": "运营统计接口",
+      "description": "ops-api",
+      "extend": "{}",
+      "progress_status": "completed",
+      "repo_id": "4f399243-b96c-bb59-b46b-301a2617f505",
+      "reference_count": 0,
+      "gmt_create": "2026-11-08T13:20:26Z",
+      "gmt_modified": "2026-11-08T13:20:26Z"
+    },
+    {
+      "id": "c05aa70f-07d8-4bee-867b-3d92fb98b63a",
+      "catalog_id": "c05aa70f-07d8-4bee-867b-3d92fb98b63a",
+      "title": "意图识别与语义校验",
+      "description": "intent-recognition",
+      "extend": "{}",
+      "progress_status": "completed",
+      "repo_id": "4f399243-b96c-bb59-b46b-301a2617f505",
+      "reference_count": 0,
+      "gmt_create": "2026-11-08T13:20:26Z",
+      "gmt_modified": "2026-11-08T13:20:26Z"
+    },
+    {
+      "id": "c3e95eda-d31d-4839-a3f0-1b84e5b5b3de",
+      "catalog_id": "c3e95eda-d31d-4839-a3f0-1b84e5b5b3de",
+      "title": "系统架构",
+      "description": "system-architecture",
+      "extend": "{}",
+      "progress_status": "completed",
+      "repo_id": "4f399243-b96c-bb59-b46b-301a2617f505",
+      "reference_count": 0,
+      "gmt_create": "2026-11-08T13:20:26Z",
+      "gmt_modified": "2026-11-08T13:20:26Z"
+    },
+    {
+      "id": "d3ae0d24-07cb-4e8f-bd6f-069e0c452010",
+      "catalog_id": "d3ae0d24-07cb-4e8f-bd6f-069e0c452010",
+      "title": "RRF 融合重排",
+      "description": "rrf-fusion",
+      "extend": "{}",
+      "progress_status": "completed",
+      "repo_id": "4f399243-b96c-bb59-b46b-301a2617f505",
+      "reference_count": 0,
+      "gmt_create": "2026-11-08T13:20:26Z",
+      "gmt_modified": "2026-11-08T13:20:26Z"
+    },
+    {
+      "id": "e81147ab-cdeb-4ab2-b5b6-fc6a704b4b8e",
+      "catalog_id": "e81147ab-cdeb-4ab2-b5b6-fc6a704b4b8e",
+      "title": "LLM Can Answer 判断",
+      "description": "llm-can-answer",
+      "extend": "{}",
+      "progress_status": "completed",
+      "repo_id": "4f399243-b96c-bb59-b46b-301a2617f505",
+      "reference_count": 0,
+      "gmt_create": "2026-11-08T13:20:26Z",
+      "gmt_modified": "2026-11-08T13:20:26Z"
+    },
+    {
+      "id": "e947bff7-494e-4b16-beea-8836c9913fde",
+      "catalog_id": "e947bff7-494e-4b16-beea-8836c9913fde",
+      "title": "防幻觉三重防护",
+      "description": "hallucination-prevention",
+      "extend": "{}",
+      "progress_status": "completed",
+      "repo_id": "4f399243-b96c-bb59-b46b-301a2617f505",
+      "reference_count": 0,
+      "gmt_create": "2026-11-08T13:20:26Z",
+      "gmt_modified": "2026-11-08T13:20:26Z"
+    },
+    {
+      "id": "f7b9c6a3-f249-4e0b-aeed-0261ddaca3c8",
+      "catalog_id": "f7b9c6a3-f249-4e0b-aeed-0261ddaca3c8",
+      "title": "RRF 融合重排算法",
+      "description": "rrf-fusion-ranking",
+      "extend": "{}",
+      "progress_status": "completed",
+      "repo_id": "4f399243-b96c-bb59-b46b-301a2617f505",
+      "reference_count": 0,
+      "gmt_create": "2026-11-08T13:20:26Z",
+      "gmt_modified": "2026-11-08T13:20:26Z"
+    },
+    {
+      "id": "f7fd8a4c-039d-47c8-942a-97e5a70ce7bf",
+      "catalog_id": "f7fd8a4c-039d-47c8-942a-97e5a70ce7bf",
+      "title": "消息历史管理",
+      "description": "message-history-management",
+      "extend": "{}",
+      "progress_status": "completed",
+      "repo_id": "4f399243-b96c-bb59-b46b-301a2617f505",
+      "reference_count": 0,
+      "gmt_create": "2026-11-08T13:20:26Z",
+      "gmt_modified": "2026-11-08T13:20:26Z"
+    },
+    {
+      "id": "f830ddcd-2dfa-4f83-a1b8-70c5450ab22e",
+      "catalog_id": "f830ddcd-2dfa-4f83-a1b8-70c5450ab22e",
+      "title": "会话存储层",
+      "description": "session-storage",
+      "extend": "{}",
+      "progress_status": "completed",
+      "repo_id": "4f399243-b96c-bb59-b46b-301a2617f505",
+      "reference_count": 0,
+      "gmt_create": "2026-11-08T13:20:26Z",
+      "gmt_modified": "2026-11-08T13:20:26Z"
+    },
+    {
+      "id": "32015eb7-cc1f-42dd-be9e-cc230b8f119a",
+      "catalog_id": "32015eb7-cc1f-42dd-be9e-cc230b8f119a",
+      "title": "核心功能",
+      "description": "core-features",
+      "extend": "{}",
+      "progress_status": "completed",
+      "repo_id": "4f399243-b96c-bb59-b46b-301a2617f505",
+      "reference_count": 0,
+      "gmt_create": "2026-11-08T13:20:26Z",
+      "gmt_modified": "2026-11-08T13:20:26Z"
+    },
+    {
+      "id": "5f6bf38e-c5e7-4d2e-a204-8389e57b80ed",
+      "catalog_id": "5f6bf38e-c5e7-4d2e-a204-8389e57b80ed",
+      "title": "扩展点设计",
+      "description": "extension-points",
+      "extend": "{}",
+      "progress_status": "completed",
+      "repo_id": "4f399243-b96c-bb59-b46b-301a2617f505",
+      "reference_count": 0,
+      "gmt_create": "2026-11-08T13:20:26Z",
+      "gmt_modified": "2026-11-08T13:20:26Z"
+    },
+    {
+      "id": "695cd497-eb2a-4c79-9b32-7d66b99a5044",
+      "catalog_id": "695cd497-eb2a-4c79-9b32-7d66b99a5044",
+      "title": "知识库管理接口",
+      "description": "kb-admin-api",
+      "extend": "{}",
+      "progress_status": "completed",
+      "repo_id": "4f399243-b96c-bb59-b46b-301a2617f505",
+      "reference_count": 0,
+      "gmt_create": "2026-11-08T13:20:26Z",
+      "gmt_modified": "2026-11-08T13:20:26Z"
+    },
+    {
+      "id": "7a9494f3-88a0-4f0d-a367-1a5d185d3526",
+      "catalog_id": "7a9494f3-88a0-4f0d-a367-1a5d185d3526",
+      "title": "防幻觉三重防护机制",
+      "description": "hallucination-prevention",
+      "extend": "{}",
+      "progress_status": "completed",
+      "repo_id": "4f399243-b96c-bb59-b46b-301a2617f505",
+      "reference_count": 0,
+      "gmt_create": "2026-11-08T13:20:26Z",
+      "gmt_modified": "2026-11-08T13:20:26Z"
+    },
+    {
+      "id": "87332503-7139-4851-8fd4-e9541c1d0272",
+      "catalog_id": "87332503-7139-4851-8fd4-e9541c1d0272",
+      "title": "NLI 蕴含校验",
+      "description": "nli-verification",
+      "extend": "{}",
+      "progress_status": "completed",
+      "repo_id": "4f399243-b96c-bb59-b46b-301a2617f505",
+      "reference_count": 0,
+      "gmt_create": "2026-11-08T13:20:26Z",
+      "gmt_modified": "2026-11-08T13:20:26Z"
+    },
+    {
+      "id": "899cd48a-9823-4006-b4b4-cc59647406b2",
+      "catalog_id": "899cd48a-9823-4006-b4b4-cc59647406b2",
+      "title": "中文分词与特征工程",
+      "description": "tokenization-chinese",
+      "extend": "{}",
+      "progress_status": "completed",
+      "repo_id": "4f399243-b96c-bb59-b46b-301a2617f505",
+      "reference_count": 0,
+      "gmt_create": "2026-11-08T13:20:26Z",
+      "gmt_modified": "2026-11-08T13:20:26Z"
+    },
+    {
+      "id": "8a065dc4-7641-40a2-9bd3-f4b95ec20ed3",
+      "catalog_id": "8a065dc4-7641-40a2-9bd3-f4b95ec20ed3",
+      "title": "Web 聊天组件",
+      "description": "web-widget-component",
+      "extend": "{}",
+      "progress_status": "completed",
+      "repo_id": "4f399243-b96c-bb59-b46b-301a2617f505",
+      "reference_count": 0,
+      "gmt_create": "2026-11-08T13:20:26Z",
+      "gmt_modified": "2026-11-08T13:20:26Z"
+    },
+    {
+      "id": "bcd43a46-efe5-43b2-9db0-f55e330c1eb7",
+      "catalog_id": "bcd43a46-efe5-43b2-9db0-f55e330c1eb7",
+      "title": "索引构建流水线",
+      "description": "index-construction-pipeline",
+      "extend": "{}",
+      "progress_status": "completed",
+      "repo_id": "4f399243-b96c-bb59-b46b-301a2617f505",
+      "reference_count": 0,
+      "gmt_create": "2026-11-08T13:20:26Z",
+      "gmt_modified": "2026-11-08T13:20:26Z"
+    },
+    {
+      "id": "c7a197d3-7187-4640-a08b-5d88b361f75c",
+      "catalog_id": "c7a197d3-7187-4640-a08b-5d88b361f75c",
+      "title": "答案缓存系统",
+      "description": "answer-cache-system",
+      "extend": "{}",
+      "progress_status": "completed",
+      "repo_id": "4f399243-b96c-bb59-b46b-301a2617f505",
+      "reference_count": 0,
+      "gmt_create": "2026-11-08T13:20:26Z",
+      "gmt_modified": "2026-11-08T13:20:26Z"
+    },
+    {
+      "id": "db35c556-a894-47a8-aad3-7ef14d992649",
+      "catalog_id": "db35c556-a894-47a8-aad3-7ef14d992649",
+      "title": "Web Widget 聊天组件",
+      "description": "web-widget-component",
+      "extend": "{}",
+      "progress_status": "completed",
+      "repo_id": "4f399243-b96c-bb59-b46b-301a2617f505",
+      "reference_count": 0,
+      "gmt_create": "2026-11-08T13:20:26Z",
+      "gmt_modified": "2026-11-08T13:20:26Z"
+    },
+    {
+      "id": "6b73ac12-ffb7-4c1e-ad03-58388cd2ce87",
+      "catalog_id": "6b73ac12-ffb7-4c1e-ad03-58388cd2ce87",
+      "title": "OTP 验证码接口",
+      "description": "otp-api",
+      "extend": "{}",
+      "progress_status": "completed",
+      "repo_id": "4f399243-b96c-bb59-b46b-301a2617f505",
+      "reference_count": 0,
+      "gmt_create": "2026-11-08T13:20:26Z",
+      "gmt_modified": "2026-11-08T13:20:26Z"
+    },
+    {
+      "id": "8a5da1ec-08c0-4434-a491-5db78dffd0b2",
+      "catalog_id": "8a5da1ec-08c0-4434-a491-5db78dffd0b2",
+      "title": "运行时控制开关",
+      "description": "runtime-control-switches",
+      "extend": "{}",
+      "progress_status": "completed",
+      "repo_id": "4f399243-b96c-bb59-b46b-301a2617f505",
+      "reference_count": 0,
+      "gmt_create": "2026-11-08T13:20:26Z",
+      "gmt_modified": "2026-11-08T13:20:26Z"
+    },
+    {
+      "id": "c325ccfa-b4cf-43aa-8fd8-b3f03e45619a",
+      "catalog_id": "c325ccfa-b4cf-43aa-8fd8-b3f03e45619a",
+      "title": "FAQ 数据模型与索引构建",
+      "description": "faq-data-model",
+      "extend": "{}",
+      "progress_status": "completed",
+      "repo_id": "4f399243-b96c-bb59-b46b-301a2617f505",
+      "reference_count": 0,
+      "gmt_create": "2026-11-08T13:20:26Z",
+      "gmt_modified": "2026-11-08T13:20:26Z"
+    },
+    {
+      "id": "cc8ae97b-ecb0-4620-8310-1bd03c377f61",
+      "catalog_id": "cc8ae97b-ecb0-4620-8310-1bd03c377f61",
+      "title": "转人工调度系统",
+      "description": "manual-handover-system",
+      "extend": "{}",
+      "progress_status": "completed",
+      "repo_id": "4f399243-b96c-bb59-b46b-301a2617f505",
+      "reference_count": 0,
+      "gmt_create": "2026-11-08T13:20:26Z",
+      "gmt_modified": "2026-11-08T13:20:26Z"
+    },
+    {
+      "id": "f685ca35-0273-49c0-ad0c-d04c98b9c93d",
+      "catalog_id": "f685ca35-0273-49c0-ad0c-d04c98b9c93d",
+      "title": "API 接口文档",
+      "description": "api-reference",
+      "extend": "{}",
+      "progress_status": "completed",
+      "repo_id": "4f399243-b96c-bb59-b46b-301a2617f505",
+      "reference_count": 0,
+      "gmt_create": "2026-11-08T13:20:26Z",
+      "gmt_modified": "2026-11-08T13:20:26Z"
+    },
+    {
+      "id": "6110ca7b-42b6-4c62-ad50-c6af5f3cc2b5",
+      "catalog_id": "6110ca7b-42b6-4c62-ad50-c6af5f3cc2b5",
+      "title": "数据模型",
+      "description": "data-models",
+      "extend": "{}",
+      "progress_status": "completed",
+      "repo_id": "4f399243-b96c-bb59-b46b-301a2617f505",
+      "reference_count": 0,
+      "gmt_create": "2026-11-08T13:20:26Z",
+      "gmt_modified": "2026-11-08T13:20:26Z"
+    },
+    {
+      "id": "91ecaaf3-2682-4b92-9a95-785f90b069be",
+      "catalog_id": "91ecaaf3-2682-4b92-9a95-785f90b069be",
+      "title": "WebSocket 实时通信",
+      "description": "websocket-api",
+      "extend": "{}",
+      "progress_status": "completed",
+      "repo_id": "4f399243-b96c-bb59-b46b-301a2617f505",
+      "reference_count": 0,
+      "gmt_create": "2026-11-08T13:20:26Z",
+      "gmt_modified": "2026-11-08T13:20:26Z"
+    },
+    {
+      "id": "f1f7c87d-2401-4dc4-b533-0885e9d5f4c6",
+      "catalog_id": "f1f7c87d-2401-4dc4-b533-0885e9d5f4c6",
+      "title": "辅助检测功能",
+      "description": "auxiliary-detection",
+      "extend": "{}",
+      "progress_status": "completed",
+      "repo_id": "4f399243-b96c-bb59-b46b-301a2617f505",
+      "reference_count": 0,
+      "gmt_create": "2026-11-08T13:20:26Z",
+      "gmt_modified": "2026-11-08T13:20:26Z"
+    },
+    {
+      "id": "6e21baf3-fa50-430a-83be-6a3933f06f91",
+      "catalog_id": "6e21baf3-fa50-430a-83be-6a3933f06f91",
+      "title": "部署与运维",
+      "description": "deployment-operations",
+      "extend": "{}",
+      "progress_status": "completed",
+      "repo_id": "4f399243-b96c-bb59-b46b-301a2617f505",
+      "reference_count": 0,
+      "gmt_create": "2026-11-08T13:20:26Z",
+      "gmt_modified": "2026-11-08T13:20:26Z"
+    },
+    {
+      "id": "328d423a-c10d-4c4a-837d-b9528c43f701",
+      "catalog_id": "328d423a-c10d-4c4a-837d-b9528c43f701",
+      "title": "测试与质量保障",
+      "description": "testing-quality",
+      "extend": "{}",
+      "progress_status": "completed",
+      "repo_id": "4f399243-b96c-bb59-b46b-301a2617f505",
+      "reference_count": 0,
+      "gmt_create": "2026-11-08T13:20:26Z",
+      "gmt_modified": "2026-11-08T13:20:26Z"
+    },
+    {
+      "id": "dbbee914-4f2b-457c-a176-97aa114b6824",
+      "catalog_id": "dbbee914-4f2b-457c-a176-97aa114b6824",
+      "title": "开发者指南",
+      "description": "development-guide",
+      "extend": "{}",
+      "progress_status": "completed",
+      "repo_id": "4f399243-b96c-bb59-b46b-301a2617f505",
+      "reference_count": 0,
+      "gmt_create": "2026-11-08T13:20:26Z",
+      "gmt_modified": "2026-11-08T13:20:26Z"
+    }
+  ],
+  "knowledge_relations": [
+    {
+      "id": 1,
+      "source_id": "a2bafc7e-dcd2-4bd4-add3-5730312c0f37",
+      "target_id": "2477fb36-1b73-46d5-8b82-ada117d75cca",
+      "source_type": "WIKI_ITEM",
+      "target_type": "WIKI_ITEM",
+      "relationship_type": "PARENT_CHILD",
+      "gmt_create": "2026-11-08T13:20:26Z",
+      "gmt_modified": "2026-11-08T13:20:26Z"
+    },
+    {
+      "id": 2,
+      "source_id": "93c25cc7-c695-43b2-b04d-efdfa12193e5",
+      "target_id": "41da046e-fe85-4ad7-a6a5-ddaafe61cc54",
+      "source_type": "WIKI_ITEM",
+      "target_type": "WIKI_ITEM",
+      "relationship_type": "PARENT_CHILD",
+      "gmt_create": "2026-11-08T13:20:26Z",
+      "gmt_modified": "2026-11-08T13:20:26Z"
+    },
+    {
+      "id": 3,
+      "source_id": "f830ddcd-2dfa-4f83-a1b8-70c5450ab22e",
+      "target_id": "41f26915-4cba-47ef-8e10-0f4734cab616",
+      "source_type": "WIKI_ITEM",
+      "target_type": "WIKI_ITEM",
+      "relationship_type": "PARENT_CHILD",
+      "gmt_create": "2026-11-08T13:20:26Z",
+      "gmt_modified": "2026-11-08T13:20:26Z"
+    },
+    {
+      "id": 4,
+      "source_id": "32015eb7-cc1f-42dd-be9e-cc230b8f119a",
+      "target_id": "4ab81fdc-4548-4c9e-b3d4-bc72667cd09b",
+      "source_type": "WIKI_ITEM",
+      "target_type": "WIKI_ITEM",
+      "relationship_type": "PARENT_CHILD",
+      "gmt_create": "2026-11-08T13:20:26Z",
+      "gmt_modified": "2026-11-08T13:20:26Z"
+    },
+    {
+      "id": 5,
+      "source_id": "c05aa70f-07d8-4bee-867b-3d92fb98b63a",
+      "target_id": "52371a91-41e7-4da6-9006-180fce9dfbdc",
+      "source_type": "WIKI_ITEM",
+      "target_type": "WIKI_ITEM",
+      "relationship_type": "PARENT_CHILD",
+      "gmt_create": "2026-11-08T13:20:26Z",
+      "gmt_modified": "2026-11-08T13:20:26Z"
+    },
+    {
+      "id": 6,
+      "source_id": "b32529e5-76a4-4aad-b12a-7af6cfe786ee",
+      "target_id": "d2c493ba-d6ff-41dd-b79c-324b08fdeaf2",
+      "source_type": "WIKI_ITEM",
+      "target_type": "WIKI_ITEM",
+      "relationship_type": "PARENT_CHILD",
+      "gmt_create": "2026-11-08T13:20:26Z",
+      "gmt_modified": "2026-11-08T13:20:26Z"
+    },
+    {
+      "id": 7,
+      "source_id": "c3e95eda-d31d-4839-a3f0-1b84e5b5b3de",
+      "target_id": "de9aa403-9b5e-4a14-8e7f-5a40ff55aeb0",
+      "source_type": "WIKI_ITEM",
+      "target_type": "WIKI_ITEM",
+      "relationship_type": "PARENT_CHILD",
+      "gmt_create": "2026-11-08T13:20:26Z",
+      "gmt_modified": "2026-11-08T13:20:26Z"
+    },
+    {
+      "id": 8,
+      "source_id": "4ab81fdc-4548-4c9e-b3d4-bc72667cd09b",
+      "target_id": "e1cd05e8-6764-413b-be08-e7fc3a0b25dd",
+      "source_type": "WIKI_ITEM",
+      "target_type": "WIKI_ITEM",
+      "relationship_type": "PARENT_CHILD",
+      "gmt_create": "2026-11-08T13:20:26Z",
+      "gmt_modified": "2026-11-08T13:20:26Z"
+    },
+    {
+      "id": 9,
+      "source_id": "f685ca35-0273-49c0-ad0c-d04c98b9c93d",
+      "target_id": "f2a253e9-3100-4b6a-a682-d443ae1b34ec",
+      "source_type": "WIKI_ITEM",
+      "target_type": "WIKI_ITEM",
+      "relationship_type": "PARENT_CHILD",
+      "gmt_create": "2026-11-08T13:20:26Z",
+      "gmt_modified": "2026-11-08T13:20:26Z"
+    },
+    {
+      "id": 10,
+      "source_id": "a2bafc7e-dcd2-4bd4-add3-5730312c0f37",
+      "target_id": "0c1f1d7b-5d08-4936-b649-54cc56199823",
+      "source_type": "WIKI_ITEM",
+      "target_type": "WIKI_ITEM",
+      "relationship_type": "PARENT_CHILD",
+      "gmt_create": "2026-11-08T13:20:26Z",
+      "gmt_modified": "2026-11-08T13:20:26Z"
+    },
+    {
+      "id": 11,
+      "source_id": "93c25cc7-c695-43b2-b04d-efdfa12193e5",
+      "target_id": "14542221-8bf7-4d92-b96f-e4193a0ad004",
+      "source_type": "WIKI_ITEM",
+      "target_type": "WIKI_ITEM",
+      "relationship_type": "PARENT_CHILD",
+      "gmt_create": "2026-11-08T13:20:26Z",
+      "gmt_modified": "2026-11-08T13:20:26Z"
+    },
+    {
+      "id": 12,
+      "source_id": "32015eb7-cc1f-42dd-be9e-cc230b8f119a",
+      "target_id": "2067b70a-53e6-4854-ade2-32cb7481f3c7",
+      "source_type": "WIKI_ITEM",
+      "target_type": "WIKI_ITEM",
+      "relationship_type": "PARENT_CHILD",
+      "gmt_create": "2026-11-08T13:20:26Z",
+      "gmt_modified": "2026-11-08T13:20:26Z"
+    },
+    {
+      "id": 13,
+      "source_id": "f685ca35-0273-49c0-ad0c-d04c98b9c93d",
+      "target_id": "275b72a6-d1c2-47f4-a6b0-3dd97eaff9b5",
+      "source_type": "WIKI_ITEM",
+      "target_type": "WIKI_ITEM",
+      "relationship_type": "PARENT_CHILD",
+      "gmt_create": "2026-11-08T13:20:26Z",
+      "gmt_modified": "2026-11-08T13:20:26Z"
+    },
+    {
+      "id": 14,
+      "source_id": "f830ddcd-2dfa-4f83-a1b8-70c5450ab22e",
+      "target_id": "4002de2f-3fb6-43b7-be43-904c63b8320d",
+      "source_type": "WIKI_ITEM",
+      "target_type": "WIKI_ITEM",
+      "relationship_type": "PARENT_CHILD",
+      "gmt_create": "2026-11-08T13:20:26Z",
+      "gmt_modified": "2026-11-08T13:20:26Z"
+    },
+    {
+      "id": 15,
+      "source_id": "4ab81fdc-4548-4c9e-b3d4-bc72667cd09b",
+      "target_id": "93c25cc7-c695-43b2-b04d-efdfa12193e5",
+      "source_type": "WIKI_ITEM",
+      "target_type": "WIKI_ITEM",
+      "relationship_type": "PARENT_CHILD",
+      "gmt_create": "2026-11-08T13:20:26Z",
+      "gmt_modified": "2026-11-08T13:20:26Z"
+    },
+    {
+      "id": 16,
+      "source_id": "b32529e5-76a4-4aad-b12a-7af6cfe786ee",
+      "target_id": "a2bafc7e-dcd2-4bd4-add3-5730312c0f37",
+      "source_type": "WIKI_ITEM",
+      "target_type": "WIKI_ITEM",
+      "relationship_type": "PARENT_CHILD",
+      "gmt_create": "2026-11-08T13:20:26Z",
+      "gmt_modified": "2026-11-08T13:20:26Z"
+    },
+    {
+      "id": 17,
+      "source_id": "c3e95eda-d31d-4839-a3f0-1b84e5b5b3de",
+      "target_id": "b32529e5-76a4-4aad-b12a-7af6cfe786ee",
+      "source_type": "WIKI_ITEM",
+      "target_type": "WIKI_ITEM",
+      "relationship_type": "PARENT_CHILD",
+      "gmt_create": "2026-11-08T13:20:26Z",
+      "gmt_modified": "2026-11-08T13:20:26Z"
+    },
+    {
+      "id": 18,
+      "source_id": "c05aa70f-07d8-4bee-867b-3d92fb98b63a",
+      "target_id": "f95f1405-347d-4dd7-87bd-313439fcf8c6",
+      "source_type": "WIKI_ITEM",
+      "target_type": "WIKI_ITEM",
+      "relationship_type": "PARENT_CHILD",
+      "gmt_create": "2026-11-08T13:20:26Z",
+      "gmt_modified": "2026-11-08T13:20:26Z"
+    },
+    {
+      "id": 19,
+      "source_id": "c3e95eda-d31d-4839-a3f0-1b84e5b5b3de",
+      "target_id": "00cc32fe-892c-4ecf-b754-becb8381d39d",
+      "source_type": "WIKI_ITEM",
+      "target_type": "WIKI_ITEM",
+      "relationship_type": "PARENT_CHILD",
+      "gmt_create": "2026-11-08T13:20:26Z",
+      "gmt_modified": "2026-11-08T13:20:26Z"
+    },
+    {
+      "id": 20,
+      "source_id": "f685ca35-0273-49c0-ad0c-d04c98b9c93d",
+      "target_id": "5032d6bf-daaf-4d2a-8d26-9d074ef9a6f7",
+      "source_type": "WIKI_ITEM",
+      "target_type": "WIKI_ITEM",
+      "relationship_type": "PARENT_CHILD",
+      "gmt_create": "2026-11-08T13:20:26Z",
+      "gmt_modified": "2026-11-08T13:20:26Z"
+    },
+    {
+      "id": 21,
+      "source_id": "4ab81fdc-4548-4c9e-b3d4-bc72667cd09b",
+      "target_id": "c05aa70f-07d8-4bee-867b-3d92fb98b63a",
+      "source_type": "WIKI_ITEM",
+      "target_type": "WIKI_ITEM",
+      "relationship_type": "PARENT_CHILD",
+      "gmt_create": "2026-11-08T13:20:26Z",
+      "gmt_modified": "2026-11-08T13:20:26Z"
+    },
+    {
+      "id": 22,
+      "source_id": "a2bafc7e-dcd2-4bd4-add3-5730312c0f37",
+      "target_id": "d3ae0d24-07cb-4e8f-bd6f-069e0c452010",
+      "source_type": "WIKI_ITEM",
+      "target_type": "WIKI_ITEM",
+      "relationship_type": "PARENT_CHILD",
+      "gmt_create": "2026-11-08T13:20:26Z",
+      "gmt_modified": "2026-11-08T13:20:26Z"
+    },
+    {
+      "id": 23,
+      "source_id": "c05aa70f-07d8-4bee-867b-3d92fb98b63a",
+      "target_id": "e81147ab-cdeb-4ab2-b5b6-fc6a704b4b8e",
+      "source_type": "WIKI_ITEM",
+      "target_type": "WIKI_ITEM",
+      "relationship_type": "PARENT_CHILD",
+      "gmt_create": "2026-11-08T13:20:26Z",
+      "gmt_modified": "2026-11-08T13:20:26Z"
+    },
+    {
+      "id": 24,
+      "source_id": "32015eb7-cc1f-42dd-be9e-cc230b8f119a",
+      "target_id": "e947bff7-494e-4b16-beea-8836c9913fde",
+      "source_type": "WIKI_ITEM",
+      "target_type": "WIKI_ITEM",
+      "relationship_type": "PARENT_CHILD",
+      "gmt_create": "2026-11-08T13:20:26Z",
+      "gmt_modified": "2026-11-08T13:20:26Z"
+    },
+    {
+      "id": 25,
+      "source_id": "93c25cc7-c695-43b2-b04d-efdfa12193e5",
+      "target_id": "f7b9c6a3-f249-4e0b-aeed-0261ddaca3c8",
+      "source_type": "WIKI_ITEM",
+      "target_type": "WIKI_ITEM",
+      "relationship_type": "PARENT_CHILD",
+      "gmt_create": "2026-11-08T13:20:26Z",
+      "gmt_modified": "2026-11-08T13:20:26Z"
+    },
+    {
+      "id": 26,
+      "source_id": "f830ddcd-2dfa-4f83-a1b8-70c5450ab22e",
+      "target_id": "f7fd8a4c-039d-47c8-942a-97e5a70ce7bf",
+      "source_type": "WIKI_ITEM",
+      "target_type": "WIKI_ITEM",
+      "relationship_type": "PARENT_CHILD",
+      "gmt_create": "2026-11-08T13:20:26Z",
+      "gmt_modified": "2026-11-08T13:20:26Z"
+    },
+    {
+      "id": 27,
+      "source_id": "b32529e5-76a4-4aad-b12a-7af6cfe786ee",
+      "target_id": "f830ddcd-2dfa-4f83-a1b8-70c5450ab22e",
+      "source_type": "WIKI_ITEM",
+      "target_type": "WIKI_ITEM",
+      "relationship_type": "PARENT_CHILD",
+      "gmt_create": "2026-11-08T13:20:26Z",
+      "gmt_modified": "2026-11-08T13:20:26Z"
+    },
+    {
+      "id": 28,
+      "source_id": "c3e95eda-d31d-4839-a3f0-1b84e5b5b3de",
+      "target_id": "5f6bf38e-c5e7-4d2e-a204-8389e57b80ed",
+      "source_type": "WIKI_ITEM",
+      "target_type": "WIKI_ITEM",
+      "relationship_type": "PARENT_CHILD",
+      "gmt_create": "2026-11-08T13:20:26Z",
+      "gmt_modified": "2026-11-08T13:20:26Z"
+    },
+    {
+      "id": 29,
+      "source_id": "f685ca35-0273-49c0-ad0c-d04c98b9c93d",
+      "target_id": "695cd497-eb2a-4c79-9b32-7d66b99a5044",
+      "source_type": "WIKI_ITEM",
+      "target_type": "WIKI_ITEM",
+      "relationship_type": "PARENT_CHILD",
+      "gmt_create": "2026-11-08T13:20:26Z",
+      "gmt_modified": "2026-11-08T13:20:26Z"
+    },
+    {
+      "id": 30,
+      "source_id": "4ab81fdc-4548-4c9e-b3d4-bc72667cd09b",
+      "target_id": "7a9494f3-88a0-4f0d-a367-1a5d185d3526",
+      "source_type": "WIKI_ITEM",
+      "target_type": "WIKI_ITEM",
+      "relationship_type": "PARENT_CHILD",
+      "gmt_create": "2026-11-08T13:20:26Z",
+      "gmt_modified": "2026-11-08T13:20:26Z"
+    },
+    {
+      "id": 31,
+      "source_id": "c05aa70f-07d8-4bee-867b-3d92fb98b63a",
+      "target_id": "87332503-7139-4851-8fd4-e9541c1d0272",
+      "source_type": "WIKI_ITEM",
+      "target_type": "WIKI_ITEM",
+      "relationship_type": "PARENT_CHILD",
+      "gmt_create": "2026-11-08T13:20:26Z",
+      "gmt_modified": "2026-11-08T13:20:26Z"
+    },
+    {
+      "id": 32,
+      "source_id": "a2bafc7e-dcd2-4bd4-add3-5730312c0f37",
+      "target_id": "899cd48a-9823-4006-b4b4-cc59647406b2",
+      "source_type": "WIKI_ITEM",
+      "target_type": "WIKI_ITEM",
+      "relationship_type": "PARENT_CHILD",
+      "gmt_create": "2026-11-08T13:20:26Z",
+      "gmt_modified": "2026-11-08T13:20:26Z"
+    },
+    {
+      "id": 33,
+      "source_id": "b32529e5-76a4-4aad-b12a-7af6cfe786ee",
+      "target_id": "8a065dc4-7641-40a2-9bd3-f4b95ec20ed3",
+      "source_type": "WIKI_ITEM",
+      "target_type": "WIKI_ITEM",
+      "relationship_type": "PARENT_CHILD",
+      "gmt_create": "2026-11-08T13:20:26Z",
+      "gmt_modified": "2026-11-08T13:20:26Z"
+    },
+    {
+      "id": 34,
+      "source_id": "93c25cc7-c695-43b2-b04d-efdfa12193e5",
+      "target_id": "bcd43a46-efe5-43b2-9db0-f55e330c1eb7",
+      "source_type": "WIKI_ITEM",
+      "target_type": "WIKI_ITEM",
+      "relationship_type": "PARENT_CHILD",
+      "gmt_create": "2026-11-08T13:20:26Z",
+      "gmt_modified": "2026-11-08T13:20:26Z"
+    },
+    {
+      "id": 35,
+      "source_id": "f830ddcd-2dfa-4f83-a1b8-70c5450ab22e",
+      "target_id": "c7a197d3-7187-4640-a08b-5d88b361f75c",
+      "source_type": "WIKI_ITEM",
+      "target_type": "WIKI_ITEM",
+      "relationship_type": "PARENT_CHILD",
+      "gmt_create": "2026-11-08T13:20:26Z",
+      "gmt_modified": "2026-11-08T13:20:26Z"
+    },
+    {
+      "id": 36,
+      "source_id": "32015eb7-cc1f-42dd-be9e-cc230b8f119a",
+      "target_id": "db35c556-a894-47a8-aad3-7ef14d992649",
+      "source_type": "WIKI_ITEM",
+      "target_type": "WIKI_ITEM",
+      "relationship_type": "PARENT_CHILD",
+      "gmt_create": "2026-11-08T13:20:26Z",
+      "gmt_modified": "2026-11-08T13:20:26Z"
+    },
+    {
+      "id": 37,
+      "source_id": "f685ca35-0273-49c0-ad0c-d04c98b9c93d",
+      "target_id": "6b73ac12-ffb7-4c1e-ad03-58388cd2ce87",
+      "source_type": "WIKI_ITEM",
+      "target_type": "WIKI_ITEM",
+      "relationship_type": "PARENT_CHILD",
+      "gmt_create": "2026-11-08T13:20:26Z",
+      "gmt_modified": "2026-11-08T13:20:26Z"
+    },
+    {
+      "id": 38,
+      "source_id": "f830ddcd-2dfa-4f83-a1b8-70c5450ab22e",
+      "target_id": "8a5da1ec-08c0-4434-a491-5db78dffd0b2",
+      "source_type": "WIKI_ITEM",
+      "target_type": "WIKI_ITEM",
+      "relationship_type": "PARENT_CHILD",
+      "gmt_create": "2026-11-08T13:20:26Z",
+      "gmt_modified": "2026-11-08T13:20:26Z"
+    },
+    {
+      "id": 39,
+      "source_id": "a2bafc7e-dcd2-4bd4-add3-5730312c0f37",
+      "target_id": "c325ccfa-b4cf-43aa-8fd8-b3f03e45619a",
+      "source_type": "WIKI_ITEM",
+      "target_type": "WIKI_ITEM",
+      "relationship_type": "PARENT_CHILD",
+      "gmt_create": "2026-11-08T13:20:26Z",
+      "gmt_modified": "2026-11-08T13:20:26Z"
+    },
+    {
+      "id": 40,
+      "source_id": "32015eb7-cc1f-42dd-be9e-cc230b8f119a",
+      "target_id": "cc8ae97b-ecb0-4620-8310-1bd03c377f61",
+      "source_type": "WIKI_ITEM",
+      "target_type": "WIKI_ITEM",
+      "relationship_type": "PARENT_CHILD",
+      "gmt_create": "2026-11-08T13:20:26Z",
+      "gmt_modified": "2026-11-08T13:20:26Z"
+    },
+    {
+      "id": 41,
+      "source_id": "f685ca35-0273-49c0-ad0c-d04c98b9c93d",
+      "target_id": "91ecaaf3-2682-4b92-9a95-785f90b069be",
+      "source_type": "WIKI_ITEM",
+      "target_type": "WIKI_ITEM",
+      "relationship_type": "PARENT_CHILD",
+      "gmt_create": "2026-11-08T13:20:26Z",
+      "gmt_modified": "2026-11-08T13:20:26Z"
+    },
+    {
+      "id": 42,
+      "source_id": "a2bafc7e-dcd2-4bd4-add3-5730312c0f37",
+      "target_id": "f1f7c87d-2401-4dc4-b533-0885e9d5f4c6",
+      "source_type": "WIKI_ITEM",
+      "target_type": "WIKI_ITEM",
+      "relationship_type": "PARENT_CHILD",
+      "gmt_create": "2026-11-08T13:20:26Z",
+      "gmt_modified": "2026-11-08T13:20:26Z"
+    }
+  ]
+}

@@ -60,34 +60,7 @@
     </style>
   </head>
   <body>
-    <div class="top">
-      <div class="logo">答</div>
-      <div>
-        <h1>小答 · 坐席工作台</h1>
-        <div class="sub">转人工待办 / AI Copilot（工单卡片 + 快捷回复 + 内部系统查询）</div>
-      </div>
-      <div class="nav">
-        <a href="/dashboard.html">运营看板</a>
-        <a href="/agent.html" class="active">坐席工作台</a>
-        <a href="/kb.html">知识库后台</a>
-      </div>
-      <div class="ws-state" id="ws-state">连接中…</div>
-      <div class="actions">
-        <button id="refresh" class="ghost">刷新</button>
-      </div>
-    </div>
-    <div class="wrap">
-      <div class="stats">
-        <div class="stat"><div class="num" id="st-waiting">–</div><div class="label">等待处理</div></div>
-        <div class="stat"><div class="num" id="st-done">–</div><div class="label">已完成</div></div>
-        <div class="stat"><div class="num" id="st-total">–</div><div class="label">累计转入</div></div>
-      </div>
-      <div class="sec-title">待办列表 <span class="cnt" id="waiting-cnt">0</span></div>
-      <div id="waiting-list"></div>
-      <div class="sec-title">已完成 <span class="cnt" id="done-cnt">0</span></div>
-      <div id="done-list" class="done-list"></div>
-      <div id="error"></div>
-    </div>
-    <script type="module" src="/src/agent.ts"></script>
+    <div id="app"></div>
+    <script type="module" src="/src/agent.tsx"></script>
   </body>
 </html>

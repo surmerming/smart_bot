@@ -1,0 +1,22 @@
+schema_version: 1
+module_path: backend/agent_orchestration
+title: Agent 编排与分类器模块
+scope:
+    - backend/app/agent/
+source_files: []
+depends_on: []
+related_to: []
+kk_module_id: ba203b57-fc11-4809-a422-b9c9e6f358fb
+kk_cards:
+    architecture_design:
+        id: 94531cbd-a10c-4c19-b6c7-d8fa96bb91e2
+        title: Agent 编排与分类器模块
+    coding_conventions:
+        id: 0067052b-28f3-4cd9-bffd-4b58d789ae12
+        title: Agent 编排与分类器模块
+    overview:
+        id: ad6b63b3-66cd-4a17-8366-3e577e47118d
+        title: Agent 编排与分类器模块
+    tech_stack:
+        id: 271c5b5c-ad54-403f-b025-0d16526cfa8d
+        title: Agent 编排与分类器模块

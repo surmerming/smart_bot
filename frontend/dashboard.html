@@ -76,65 +76,7 @@
     </style>
   </head>
   <body>
-    <div class="top">
-      <div class="logo">答</div>
-      <div>
-        <h1>小答 · 运营看板</h1>
-        <div class="sub">自动化率 / 转人工率 / 点赞率（口径：转过人工即归人工）</div>
-      </div>
-      <div class="nav">
-        <a href="/dashboard.html" class="active">运营看板</a>
-        <a href="/agent.html">坐席工作台</a>
-        <a href="/kb.html">知识库后台</a>
-      </div>
-      <div class="actions">
-        <button id="refresh" class="ghost">刷新</button>
-      </div>
-    </div>
-    <div class="wrap">
-      <div class="cards" id="cards"></div>
-      <div class="panel">
-        <h2>⚡ 运行控制（Kill Switch + 灰度）</h2>
-        <div class="rc-grid">
-          <div>
-            <div class="rc-actions" id="rc-modes">
-              <button class="rc-btn" data-mode="auto">正常服务<small>RAG + 自动回答全开</small></button>
-              <button class="rc-btn danger" data-mode="handover">全局转人工<small>半切：所有对话直接登记人工</small></button>
-              <button class="rc-btn danger" data-mode="off">维护下线<small>全切：回复维护话术</small></button>
-            </div>
-            <div class="rc-slider">
-              <span style="font-size:12px;color:#6B7280;flex-shrink:0">灰度放量</span>
-              <input type="range" id="rc-gray" min="0" max="100" step="5" value="0" />
-              <span class="val" id="rc-gray-val">0%</span>
-            </div>
-          </div>
-          <div class="rc-status" id="rc-status"></div>
-        </div>
-        <div class="tip">Kill Switch 生效后即影响全部在线会话：全局转人工 = 所有新消息直接登记人工排队（不调 LLM）；维护下线 = 统一回复维护话术（不登记不入队）。灰度 = 按会话稳定哈希放量（同会话全程同组），命中组在 init 响应中标记 gray=true 便于观测。</div>
-      </div>
-      <div class="panel">
-        <h2>核心比率</h2>
-        <div id="bars"></div>
-        <div class="tip">统计口径（plan 6.1 铁律）：会话中只要发生过转人工，整个会话归入转人工类，不计入自动化率；自动化率 + 转人工率 = 100%。</div>
-      </div>
-      <div class="panel">
-        <h2>会话漏斗（State A / B+C）</h2>
-        <div class="funnel" id="funnel"></div>
-        <div class="tip">State A 纯 Agent 闭环 · State B+C 发生过转人工（Agent 未闭环）。用于定位优化方向，不用于结果统计。</div>
-      </div>
-      <div class="panel">
-        <h2>CSAT 满意度</h2>
-        <div id="csat"></div>
-      </div>
-      <div class="panel">
-        <h2>最近 Bad Case（点踩）</h2>
-        <table>
-          <thead><tr><th style="width:38%">用户问题</th><th>当时 Bot 回答</th><th style="width:120px">时间</th><th style="width:190px">状态 / 处理</th></tr></thead>
-          <tbody id="badcases"></tbody>
-        </table>
-      </div>
-      <div class="error" id="error"></div>
-    </div>
-    <script type="module" src="/src/dashboard.ts"></script>
+    <div id="app"></div>
+    <script type="module" src="/src/dashboard.tsx"></script>
   </body>
 </html>

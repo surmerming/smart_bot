@@ -19,7 +19,7 @@ echo "== 3/5 并发压测冒烟（进程内 Mock） =="
 
 echo ""
 echo "== 4/5 前端构建（官网 / 坐席 / 看板） =="
-(cd "$ROOT/frontend" && npm run build)
+(cd "$ROOT/frontend" && pnpm run build)
 
 echo ""
 echo "== 5/5 知识库健康体检（重复 FAQ 检测） =="

@@ -1,0 +1,108 @@
+/* 聊天 Widget 样式（挂载在 Shadow DOM 内，与宿主站点完全隔离） */
+
+:host { all: initial; font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif; }
+.xd-fab {
+  position: fixed; right: 24px; bottom: 24px; z-index: 9999;
+  width: 56px; height: 56px; border-radius: 50%;
+  background: #0066CC; color: #fff; border: none; cursor: pointer;
+  box-shadow: 0 8px 24px rgba(0,102,204,.35); display: flex; align-items: center; justify-content: center;
+  transition: transform .2s ease;
+}
+.xd-fab:hover { transform: scale(1.06); }
+.xd-fab svg { width: 28px; height: 28px; }
+.xd-badge {
+  position: absolute; top: -2px; right: -2px; min-width: 18px; height: 18px; padding: 0 4px;
+  background: #EF4444; color: #fff; font-size: 11px; border-radius: 9px; display: flex; align-items: center; justify-content: center;
+  box-sizing: border-box;
+}
+.xd-panel {
+  width: 360px; max-width: calc(100vw - 32px); height: 560px; max-height: calc(100vh - 120px);
+  display: flex; flex-direction: column; border-radius: 16px; overflow: hidden;
+  background: #fff; box-shadow: 0 12px 48px rgba(17,18,20,.16); border: 1px solid #ECECEF;
+  position: fixed; right: 24px; bottom: 92px; z-index: 9998;
+}
+.xd-panel.inline {
+  position: relative; right: auto; bottom: auto; z-index: 0;
+  box-shadow: 0 8px 32px rgba(17,18,20,.10); height: 480px;
+}
+.xd-header {
+  display: flex; align-items: center; gap: 8px; padding: 14px 16px;
+  background: #FAFAFC; border-bottom: 1px solid #ECECEF;
+}
+.xd-header-logo {
+  width: 32px; height: 32px; border-radius: 9px; background: #0066CC; color: #fff;
+  display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 700; flex-shrink: 0;
+}
+.xd-header-title { font-size: 14px; font-weight: 600; color: #111214; line-height: 1.2; }
+.xd-header-status { display: flex; align-items: center; gap: 4px; font-size: 11px; color: #6B7280; margin-top: 2px; }
+.xd-dot { width: 6px; height: 6px; border-radius: 50%; background: #22C55E; }
+.xd-close { margin-left: auto; background: none; border: none; cursor: pointer; color: #6B7280; font-size: 18px; padding: 2px 6px; }
+.xd-close:hover { color: #111214; }
+.xd-messages { flex: 1; overflow-y: auto; padding: 16px; background: #FAFAFC; display: flex; flex-direction: column; gap: 12px; }
+.xd-msg { display: flex; flex-direction: column; max-width: 84%; }
+.xd-msg.bot { align-self: flex-start; align-items: flex-start; }
+.xd-msg.user { align-self: flex-end; align-items: flex-end; }
+.xd-bubble {
+  padding: 10px 13px; border-radius: 12px; font-size: 14px; line-height: 1.55; white-space: pre-wrap; word-break: break-word;
+}
+.xd-msg.bot .xd-bubble { background: #fff; border: 1px solid #ECECEF; color: #111214; border-top-left-radius: 4px; }
+.xd-msg.user .xd-bubble { background: #0066CC; color: #fff; border-top-right-radius: 4px; }
+.xd-faq-badge {
+  margin-top: 6px; font-size: 11px; color: #16A34A; background: #F0FDF4; border: 1px solid #BBF7D0;
+  padding: 3px 8px; border-radius: 8px; display: inline-flex; align-items: center; gap: 4px;
+}
+.xd-feedback { margin-top: 6px; font-size: 12px; color: #9CA3AF; display: flex; align-items: center; gap: 4px; }
+.xd-feedback button { background: none; border: none; cursor: pointer; font-size: 13px; padding: 0 3px; color: #6B7280; }
+.xd-feedback button:hover { color: #111214; }
+.xd-handover-tip {
+  margin: 6px 0 0; padding: 8px 10px; background: #FFF7ED; border: 1px solid #FED7AA; color: #9A3412;
+  border-radius: 10px; font-size: 12px; line-height: 1.5;
+}
+.xd-csat { margin-top: 8px; padding: 10px 12px; background: #F8FAFC; border: 1px solid #E7E8EA; border-radius: 10px; font-size: 12px; color: #374151; }
+.xd-csat .xd-csat-q { margin-bottom: 6px; color: #6B7280; }
+.xd-csat .xd-csat-stars { display: flex; gap: 2px; font-size: 20px; cursor: pointer; }
+.xd-csat .xd-csat-stars span { color: #D1D5DB; transition: transform .1s ease; }
+.xd-csat .xd-csat-stars span.on { color: #F59E0B; }
+.xd-csat .xd-csat-stars span:hover { transform: scale(1.15); }
+.xd-csat textarea { width: 100%; margin-top: 8px; border: 1px solid #D4D4D8; border-radius: 8px; padding: 6px 8px; font-size: 12px; resize: vertical; box-sizing: border-box; font-family: inherit; }
+.xd-csat button.xd-csat-submit { margin-top: 8px; background: #0066CC; color: #fff; border: none; border-radius: 8px; padding: 6px 16px; font-size: 12px; cursor: pointer; }
+.xd-csat button.xd-csat-submit:disabled { background: #9CA3AF; cursor: default; }
+.xd-csat-done { margin-top: 8px; padding: 8px 12px; background: #F0FDF4; border: 1px solid #BBF7D0; color: #15803D; border-radius: 10px; font-size: 12px; }
+.xd-typing { display: inline-flex; gap: 4px; padding: 4px 0; }
+.xd-typing span { width: 6px; height: 6px; border-radius: 50%; background: #C4C4CC; animation: xd-bounce 1.2s infinite; }
+.xd-typing span:nth-child(2) { animation-delay: .2s; }
+.xd-typing span:nth-child(3) { animation-delay: .4s; }
+@keyframes xd-bounce { 0%,60%,100%{transform:translateY(0);opacity:.4} 30%{transform:translateY(-4px);opacity:1} }
+@keyframes xd-blink { 0%,100%{opacity:1} 50%{opacity:0} }
+.xd-caret { display: inline-block; width: 2px; height: 14px; background: #0066CC; margin-left: 2px; vertical-align: -2px; animation: xd-blink 1s infinite; }
+.xd-chips { padding: 8px 16px 0; background: #FAFAFC; display: flex; flex-wrap: wrap; gap: 8px; }
+.xd-chip {
+  background: #fff; border: 1px solid #BBD7F2; color: #0066CC; border-radius: 14px;
+  font-size: 12px; padding: 6px 11px; cursor: pointer; transition: all .15s;
+}
+.xd-chip:hover { background: #0066CC; color: #fff; }
+.xd-input-bar { display: flex; gap: 8px; padding: 12px 16px; background: #fff; border-top: 1px solid #ECECEF; }
+.xd-input-bar input {
+  flex: 1; border: none; outline: none; background: #F5F5F7; border-radius: 10px;
+  padding: 10px 14px; font-size: 14px; color: #111214;
+}
+.xd-input-bar button {
+  border: none; background: #0066CC; color: #fff; border-radius: 10px; padding: 0 18px;
+  font-size: 14px; cursor: pointer; font-weight: 600;
+}
+.xd-input-bar button:disabled { background: #A8C8EA; cursor: not-allowed; }
+.xd-error { text-align: center; color: #EF4444; font-size: 12px; padding: 8px 12px; }
+/* 免责声明：发送区上方小字明示 */
+.xd-disclaimer {
+  padding: 6px 16px 0; background: #FAFAFC; text-align: center;
+  font-size: 10.5px; color: #9CA3AF; line-height: 1.5;
+}
+/* OTP 验证卡片 */
+.xd-otp { margin-top: 8px; padding: 10px 12px; background: #F0F9FF; border: 1px solid #BAE6FD; border-radius: 10px; font-size: 12px; color: #075985; }
+.xd-otp .xd-otp-q { margin-bottom: 6px; color: #0369A1; font-weight: 600; }
+.xd-otp .xd-otp-row { display: flex; gap: 6px; margin-bottom: 6px; }
+.xd-otp input { flex: 1; border: 1px solid #BAE6FD; border-radius: 8px; padding: 6px 8px; font-size: 12px; box-sizing: border-box; font-family: inherit; min-width: 0; }
+.xd-otp button { background: #0284C7; color: #fff; border: none; border-radius: 8px; padding: 6px 12px; font-size: 12px; cursor: pointer; white-space: nowrap; }
+.xd-otp button:disabled { background: #9CA3AF; cursor: default; }
+.xd-otp .xd-otp-demo { margin-top: 4px; font-size: 11px; color: #0C4A6E; }
+.xd-otp .xd-otp-done { margin-top: 8px; padding: 8px 12px; background: #F0FDF4; border: 1px solid #BBF7D0; color: #15803D; border-radius: 10px; font-size: 12px; }

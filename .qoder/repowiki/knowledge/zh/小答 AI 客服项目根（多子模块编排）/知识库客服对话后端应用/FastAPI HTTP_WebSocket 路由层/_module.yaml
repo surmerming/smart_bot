@@ -1,0 +1,25 @@
+schema_version: 1
+module_path: backend/api_routers
+title: FastAPI HTTP/WebSocket 路由层
+scope:
+    - backend/app/routers/
+source_files: []
+depends_on: []
+related_to:
+    - path: frontend
+      reason: 前端 api.ts 通过 fetch 直接调用后端 /api/v1/chat/stream、/api/v1/kb/faqs、/api/v1/ops/* 等 REST 与 WebSocket 路由。
+kk_module_id: 5ce02c87-7e06-4bc2-ae24-93c1ef1b0137
+kk_ordinal: 1
+kk_cards:
+    architecture_design:
+        id: c8443a20-ac3e-4581-b461-ea28cf8a0930
+        title: FastAPI HTTP/WebSocket 路由层
+    coding_conventions:
+        id: 9548e395-5f1e-499f-8752-1fb529da403e
+        title: FastAPI HTTP/WebSocket 路由层
+    overview:
+        id: 08b4916c-4f95-4431-9643-d68bdf85893b
+        title: FastAPI HTTP/WebSocket 路由层
+    tech_stack:
+        id: 3ec6cd2c-f83d-487f-bcb1-ae83b96dae31
+        title: FastAPI HTTP/WebSocket 路由层

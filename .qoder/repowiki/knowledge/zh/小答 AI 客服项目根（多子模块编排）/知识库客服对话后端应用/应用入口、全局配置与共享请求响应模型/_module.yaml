@@ -1,0 +1,28 @@
+schema_version: 1
+module_path: backend/shared_app_layer
+title: 应用入口、全局配置与共享请求响应模型
+scope:
+    - backend/app/models/
+    - backend/app/config.py
+    - backend/app/main.py
+source_files: []
+depends_on: []
+related_to: []
+kk_module_id: f76c9dd4-6c96-4304-b0c8-1ef2c08dad0b
+kk_ordinal: 3
+kk_cards:
+    architecture_design:
+        id: 5e0077f1-e4f3-4bde-80b3-dbb71e614ecc
+        title: 应用入口、全局配置与共享请求响应模型
+    coding_conventions:
+        id: 80389eb7-ed54-4278-aed7-85aa72e08164
+        title: 应用入口、全局配置与共享请求响应模型
+    overview:
+        id: bb722653-dc83-4adb-bf97-0826223f6b20
+        title: 应用入口、全局配置与共享请求响应模型
+    tech_stack:
+        id: 242595cd-f73c-4781-86a3-99d155db64b9
+        title: 应用入口、全局配置与共享请求响应模型
+    unique_setup_and_commands:
+        id: cb308c1a-1c73-4f49-8883-40dde2b2078c
+        title: 应用入口、全局配置与共享请求响应模型

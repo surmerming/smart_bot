@@ -1,0 +1,135 @@
+# 知识卡导出索引文件
+schema_version: 1
+locale: zh-CN
+commit: ec51ab45aac655017c4a3783a1e93497f92518a1
+branch: main
+exported_at: "2026-11-08T13:20:26Z"
+modules:
+    backend:
+        dir_name: 知识库客服对话后端应用
+        title: 知识库客服对话后端应用
+        scope:
+            - backend/
+        source_files: []
+        children:
+            - backend/agent_orchestration
+            - backend/api_routers
+            - backend/persistence_storage
+            - backend/shared_app_layer
+        depends_on: []
+        related_to: []
+    backend/agent_orchestration:
+        dir_name: Agent 编排与分类器模块
+        title: Agent 编排与分类器模块
+        scope:
+            - backend/app/agent/
+        source_files: []
+        children:
+            - backend/agent_orchestration/classifiers
+            - backend/agent_orchestration/orchestrator_llm
+        depends_on: []
+        related_to: []
+    backend/agent_orchestration/classifiers:
+        dir_name: Agent 意图_情绪_幽默分类器
+        title: Agent 意图/情绪/幽默分类器
+        scope:
+            - backend/app/agent/emotion.py
+            - backend/app/agent/humor.py
+            - backend/app/agent/intent.py
+        source_files: []
+        children: []
+        depends_on: []
+        related_to: []
+    backend/agent_orchestration/orchestrator_llm:
+        dir_name: Agent 编排与 LLM 适配层
+        title: Agent 编排与 LLM 适配层
+        scope:
+            - backend/app/agent/orchestrator.py
+            - backend/app/agent/copilot.py
+            - backend/app/agent/llm.py
+        source_files: []
+        children: []
+        depends_on: []
+        related_to:
+            - path: backend/agent_orchestration/classifiers
+              reason: orchestrator.py 在主管线中调用 intent/emotion/humor 三类分类器完成意图识别、情绪分级与幽默润色决策。
+    backend/api_routers:
+        dir_name: FastAPI HTTP_WebSocket 路由层
+        title: FastAPI HTTP/WebSocket 路由层
+        scope:
+            - backend/app/routers/
+        source_files: []
+        children: []
+        depends_on: []
+        related_to:
+            - path: frontend
+              reason: 前端 api.ts 通过 fetch 直接调用后端 /api/v1/chat/stream、/api/v1/kb/faqs、/api/v1/ops/* 等 REST 与 WebSocket 路由。
+    backend/persistence_storage:
+        dir_name: 会话持久化与知识库检索存储层
+        title: 会话持久化与知识库检索存储层
+        scope:
+            - backend/app/storage/
+        source_files: []
+        children: []
+        depends_on: []
+        related_to:
+            - path: knowledge_base_tooling
+              reason: import_kb_to_admin.py 直接调用 db.create_faq_draft / add_faq_version 写入 persistence_storage.db 中的 faq_drafts 与 faq_versions 表。
+        version_of:
+            - path: knowledge_base_tooling
+              reason: build_kb.py 与 import_kb_to_admin.py 分别实现 FAQ 索引构建（TF-IDF/BM25）和草稿/版本补录两条互补的知识库初始化路径，服务于同一知识库数据源。
+    backend/shared_app_layer:
+        dir_name: 应用入口、全局配置与共享请求响应模型
+        title: 应用入口、全局配置与共享请求响应模型
+        scope:
+            - backend/app/models/
+            - backend/app/config.py
+            - backend/app/main.py
+        source_files: []
+        children: []
+        depends_on: []
+        related_to: []
+    frontend:
+        dir_name: 小答客服前端（官网 + 可嵌入 Widget + 管理后台）
+        title: 小答客服前端（官网 + 可嵌入 Widget + 管理后台）
+        scope:
+            - frontend/
+        source_files: []
+        children: []
+        depends_on: []
+        related_to: []
+    knowledge_base_tooling:
+        dir_name: 知识库构建与后台导入工具集
+        title: 知识库构建与后台导入工具集
+        scope:
+            - knowledge_base/
+        source_files: []
+        children: []
+        depends_on: []
+        related_to: []
+    ops_scripts:
+        dir_name: 运维脚本与 CI 流水线
+        title: 运维脚本与 CI 流水线
+        scope:
+            - scripts/
+            - .github/workflows/ci.yml
+        source_files: []
+        children: []
+        depends_on: []
+        related_to: []
+    root:
+        dir_name: 小答 AI 客服项目根（多子模块编排）
+        title: 小答 AI 客服项目根（多子模块编排）
+        scope:
+            - .gitignore
+            - dev.sh
+            - docker-compose.yml
+            - package.json
+        source_files: []
+        children:
+            - backend
+            - frontend
+            - knowledge_base_tooling
+            - ops_scripts
+        depends_on: []
+        related_to: []

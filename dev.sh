@@ -57,7 +57,7 @@ echo $! > "$ROOT/.backend.pid"
 
 echo "[3/3] 启动前端 http://localhost:$PORT_FRONTEND"
 cd "$ROOT/frontend"
-nohup npm run dev > "$ROOT/frontend.log" 2>&1 &
+nohup pnpm run dev > "$ROOT/frontend.log" 2>&1 &
 disown
 echo $! > "$ROOT/.frontend.pid"
 

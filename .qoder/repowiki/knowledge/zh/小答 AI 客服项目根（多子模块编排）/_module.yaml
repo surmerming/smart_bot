@@ -1,0 +1,53 @@
+schema_version: 1
+module_path: root
+title: 小答 AI 客服项目根（多子模块编排）
+scope:
+    - .gitignore
+    - dev.sh
+    - docker-compose.yml
+    - package.json
+source_files: []
+depends_on: []
+related_to: []
+kk_module_id: 6020550d-a95c-4a5b-81d6-a12131818ab2
+kk_cards:
+    architecture_design:
+        id: 9c11f790-bdb2-496d-9ef7-a0a03b5e4aaf
+        title: 小答 AI 客服项目根（多子模块编排）
+    coding_conventions:
+        id: 373b1cc4-8b22-470b-80e4-cc6ad32ad499
+        title: 小答 AI 客服项目根（多子模块编排）
+    overview:
+        id: 8b7060a4-34d5-4d54-8b74-1a21f511f8dd
+        title: 小答 AI 客服项目根（多子模块编排）
+    tech_stack:
+        id: 005b260e-6a86-46fc-90ad-ea888c1d0e08
+        title: 小答 AI 客服项目根（多子模块编排）
+    unique_setup_and_commands:
+        id: 486fe3e6-72a7-47c1-8e84-081cd828ab33
+        title: 小答 AI 客服项目根（多子模块编排）
+    build_system:
+        id: 1b469941-c331-494c-8779-b206212cb2ad
+        title: 多模块编排构建与 CI 流水线（dev.sh + docker-compose + GitHub Actions）
+    configuration_system:
+        id: c6e10c94-9c68-483f-95ec-46232a938b60
+        title: 后端 .env + Settings 单例配置系统
+    dependency_management:
+        id: 854b2f22-be15-4345-8156-ef472f7bccec
+        title: 多语言依赖管理：Python requirements.txt + npm lockfile
+    error_handling:
+        id: 93432bf2-6f16-4b84-95d6-e0a621485dfe
+        title: FastAPI HTTPException + try/except 分散式错误处理
+    frontend_style:
+        id: 52ba8e3e-0ad1-40e1-8603-c28ff347bc1b
+        title: 小答前端：原生 CSS + CSS 变量设计令牌体系
+    logging_system:
+        id: 6650a90c-a15e-4970-baf2-d053e5d653b4
+        title: Python logging 基础日志系统
+kk_repo_cards:
+    - build_system
+    - configuration_system
+    - dependency_management
+    - error_handling
+    - frontend_style
+    - logging_system

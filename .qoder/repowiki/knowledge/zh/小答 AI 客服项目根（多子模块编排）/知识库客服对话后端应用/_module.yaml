@@ -1,0 +1,25 @@
+schema_version: 1
+module_path: backend
+title: 知识库客服对话后端应用
+scope:
+    - backend/
+source_files: []
+depends_on: []
+related_to: []
+kk_module_id: 4407bcba-6b0c-4bc7-b880-6d69f4154c49
+kk_cards:
+    architecture_design:
+        id: 78a165cc-92f4-4869-ad12-d01c298e26e5
+        title: 知识库客服对话后端应用
+    coding_conventions:
+        id: 05be385d-5e8e-4b2c-ba46-b73fe97f137b
+        title: 知识库客服对话后端应用
+    overview:
+        id: 8ccb671c-8ea5-4b78-8c38-28c1d4ab29a8
+        title: 知识库客服对话后端应用
+    tech_stack:
+        id: d6caed42-3496-40bd-aebf-89ad15981d6f
+        title: 知识库客服对话后端应用
+    unique_setup_and_commands:
+        id: 45b635b2-12aa-4eb8-a09e-48630af80cc4
+        title: 知识库客服对话后端应用

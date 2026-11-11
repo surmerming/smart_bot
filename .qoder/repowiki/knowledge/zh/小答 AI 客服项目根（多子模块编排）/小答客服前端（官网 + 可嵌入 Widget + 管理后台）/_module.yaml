@@ -1,0 +1,26 @@
+schema_version: 1
+module_path: frontend
+title: 小答客服前端（官网 + 可嵌入 Widget + 管理后台）
+scope:
+    - frontend/
+source_files: []
+depends_on: []
+related_to: []
+kk_module_id: 8cf2bb3d-e9db-4d25-a99b-213ad1ca9176
+kk_ordinal: 1
+kk_cards:
+    architecture_design:
+        id: d237d845-ed00-43f0-b056-975923429d57
+        title: 小答客服前端（官网 + 可嵌入 Widget + 管理后台）
+    coding_conventions:
+        id: e65cee98-18db-4001-aa9d-b67de7558bdb
+        title: 小答客服前端（官网 + 可嵌入 Widget + 管理后台）
+    overview:
+        id: ac2ee890-6afe-4a8f-9ccc-c49c4dbd462c
+        title: 小答客服前端（官网 + 可嵌入 Widget + 管理后台）
+    tech_stack:
+        id: 12570b94-d120-41fe-a544-1a4e1cdb5f11
+        title: 小答客服前端（官网 + 可嵌入 Widget + 管理后台）
+    unique_setup_and_commands:
+        id: 08007b08-c5b8-48ea-aa30-dcc76ac5a5b1
+        title: 小答客服前端（官网 + 可嵌入 Widget + 管理后台）

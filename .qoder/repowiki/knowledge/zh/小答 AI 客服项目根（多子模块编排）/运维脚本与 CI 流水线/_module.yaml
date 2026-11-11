@@ -1,0 +1,27 @@
+schema_version: 1
+module_path: ops_scripts
+title: 运维脚本与 CI 流水线
+scope:
+    - scripts/
+    - .github/workflows/ci.yml
+source_files: []
+depends_on: []
+related_to: []
+kk_module_id: 8fd48393-a0f7-414a-bec1-d1a2b72548fc
+kk_ordinal: 3
+kk_cards:
+    architecture_design:
+        id: 9866d2ff-7d72-4776-818b-c09e6176aa3b
+        title: 运维脚本与 CI 流水线
+    coding_conventions:
+        id: 22bda061-0b53-4a30-8205-9af800fcb191
+        title: 运维脚本与 CI 流水线
+    overview:
+        id: 3f2f4e8a-35e6-4dce-94bc-447cf90e8fd3
+        title: 运维脚本与 CI 流水线
+    tech_stack:
+        id: a501db4b-f01c-4299-bc79-e62ad5ad602c
+        title: 运维脚本与 CI 流水线
+    unique_setup_and_commands:
+        id: 19a969d8-4d44-4426-9cc6-fd3262c0e4b2
+        title: 运维脚本与 CI 流水线

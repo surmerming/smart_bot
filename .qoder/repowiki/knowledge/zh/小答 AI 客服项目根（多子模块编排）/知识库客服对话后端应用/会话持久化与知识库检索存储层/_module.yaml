@@ -1,0 +1,28 @@
+schema_version: 1
+module_path: backend/persistence_storage
+title: 会话持久化与知识库检索存储层
+scope:
+    - backend/app/storage/
+source_files: []
+depends_on: []
+related_to:
+    - path: knowledge_base_tooling
+      reason: import_kb_to_admin.py 直接调用 db.create_faq_draft / add_faq_version 写入 persistence_storage.db 中的 faq_drafts 与 faq_versions 表。
+version_of:
+    - path: knowledge_base_tooling
+      reason: build_kb.py 与 import_kb_to_admin.py 分别实现 FAQ 索引构建（TF-IDF/BM25）和草稿/版本补录两条互补的知识库初始化路径，服务于同一知识库数据源。
+kk_module_id: 54785fd6-3973-4b2a-8881-262bd3f91f03
+kk_ordinal: 2
+kk_cards:
+    architecture_design:
+        id: 324930ec-54a3-4929-96e9-e79120ef74dc
+        title: 会话持久化与知识库检索存储层
+    coding_conventions:
+        id: 31cf414d-af9e-4911-8f9d-d0368d3d6580
+        title: 会话持久化与知识库检索存储层
+    overview:
+        id: 81728f39-e72c-4dcb-a9a4-227380a8ff53
+        title: 会话持久化与知识库检索存储层
+    tech_stack:
+        id: 76188579-6821-405c-b4aa-8bef56ce55bb
+        title: 会话持久化与知识库检索存储层

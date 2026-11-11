@@ -1,0 +1,26 @@
+schema_version: 1
+module_path: knowledge_base_tooling
+title: 知识库构建与后台导入工具集
+scope:
+    - knowledge_base/
+source_files: []
+depends_on: []
+related_to: []
+kk_module_id: 9e0bddad-4d48-49b1-a92c-6512ae6f9c1c
+kk_ordinal: 2
+kk_cards:
+    architecture_design:
+        id: e0de8568-45fc-4b49-980f-d528987745db
+        title: 知识库构建与后台导入工具集
+    coding_conventions:
+        id: dce828b8-1f9f-4625-9f23-9a1bb2e51a60
+        title: 知识库构建与后台导入工具集
+    overview:
+        id: 1347cc08-33c0-4cde-8ccd-ca91309dc6e9
+        title: 知识库构建与后台导入工具集
+    tech_stack:
+        id: 95d47029-72e8-41e5-902b-278a1d5c50de
+        title: 知识库构建与后台导入工具集
+    unique_setup_and_commands:
+        id: 9aa38e2b-7efa-4664-8849-577216861e2e
+        title: 知识库构建与后台导入工具集

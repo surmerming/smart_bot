@@ -1,0 +1,29 @@
+schema_version: 1
+module_path: backend/agent_orchestration/orchestrator_llm
+title: Agent 编排与 LLM 适配层
+scope:
+    - backend/app/agent/orchestrator.py
+    - backend/app/agent/copilot.py
+    - backend/app/agent/llm.py
+source_files: []
+depends_on: []
+related_to:
+    - path: backend/agent_orchestration/classifiers
+      reason: orchestrator.py 在主管线中调用 intent/emotion/humor 三类分类器完成意图识别、情绪分级与幽默润色决策。
+kk_module_id: 67d6fe97-81b1-4192-81e2-81e9ba726776
+kk_cards:
+    architecture_design:
+        id: f7389915-071d-4ec0-8535-963e622a236d
+        title: Agent 编排与 LLM 适配层
+    coding_conventions:
+        id: 455acb23-d6f7-4876-8bfc-986c5105ea7d
+        title: Agent 编排与 LLM 适配层
+    overview:
+        id: cb00e347-ae6b-495a-9e50-c0e9e300b413
+        title: Agent 编排与 LLM 适配层
+    tech_stack:
+        id: c3ad43db-c010-4f98-baf6-d8e7c733d237
+        title: Agent 编排与 LLM 适配层
+    unique_setup_and_commands:
+        id: d48e31a4-59cb-4439-a21d-ff5762cc699f
+        title: Agent 编排与 LLM 适配层
